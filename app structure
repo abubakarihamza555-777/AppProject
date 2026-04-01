@@ -1,0 +1,170 @@
+water_delivery_app/
+│
+├── lib/
+│   ├── main.dart
+│   │
+│   ├── core/                          # Core module
+│   │   ├── constants/
+│   │   │   ├── app_constants.dart
+│   │   │   └── supabase_constants.dart
+│   │   ├── theme/
+│   │   │   ├── app_theme.dart
+│   │   │   └── colors.dart
+│   │   ├── utils/
+│   │   │   ├── helpers.dart
+│   │   │   ├── validators.dart
+│   │   │   └── formatters.dart
+│   │   └── extensions/
+│   │       ├── context_extensions.dart
+│   │       └── string_extensions.dart
+│   │
+│   ├── modules/                        # Feature modules
+│   │   ├── auth/
+│   │   │   ├── models/
+│   │   │   │   ├── user_model.dart
+│   │   │   │   └── auth_response.dart
+│   │   │   ├── screens/
+│   │   │   │   ├── splash_screen.dart
+│   │   │   │   ├── login_screen.dart
+│   │   │   │   ├── register_screen.dart
+│   │   │   │   └── forgot_password_screen.dart
+│   │   │   ├── widgets/
+│   │   │   │   ├── social_login_buttons.dart
+│   │   │   │   └── auth_text_field.dart
+│   │   │   ├── controllers/
+│   │   │   │   └── auth_controller.dart
+│   │   │   ├── services/
+│   │   │   │   └── auth_service.dart
+│   │   │   └── repositories/
+│   │   │       └── auth_repository.dart
+│   │   │
+│   │   ├── customer/
+│   │   │   ├── models/
+│   │   │   │   ├── water_request_model.dart
+│   │   │   │   └── order_model.dart
+│   │   │   ├── screens/
+│   │   │   │   ├── home_screen.dart
+│   │   │   │   ├── request_water_screen.dart
+│   │   │   │   ├── vendor_list_screen.dart
+│   │   │   │   ├── order_confirmation_screen.dart
+│   │   │   │   ├── order_tracking_screen.dart
+│   │   │   │   ├── payment_screen.dart
+│   │   │   │   ├── chat_screen.dart
+│   │   │   │   ├── order_history_screen.dart
+│   │   │   │   └── profile_screen.dart
+│   │   │   ├── widgets/
+│   │   │   │   ├── water_card.dart
+│   │   │   │   ├── vendor_card.dart
+│   │   │   │   ├── order_status_timeline.dart
+│   │   │   │   └── rating_widget.dart
+│   │   │   ├── controllers/
+│   │   │   │   ├── home_controller.dart
+│   │   │   │   ├── order_controller.dart
+│   │   │   │   └── payment_controller.dart
+│   │   │   └── services/
+│   │   │       ├── order_service.dart
+│   │   │       └── payment_service.dart
+│   │   │
+│   │   ├── vendor/
+│   │   │   ├── models/
+│   │   │   │   ├── vendor_model.dart
+│   │   │   │   └── earnings_model.dart
+│   │   │   ├── screens/
+│   │   │   │   ├── vendor_dashboard.dart
+│   │   │   │   ├── incoming_orders_screen.dart
+│   │   │   │   ├── active_deliveries_screen.dart
+│   │   │   │   ├── order_details_screen.dart
+│   │   │   │   ├── earnings_screen.dart
+│   │   │   │   └── vendor_profile_screen.dart
+│   │   │   ├── widgets/
+│   │   │   │   ├── order_card.dart
+│   │   │   │   ├── earnings_chart.dart
+│   │   │   │   └── delivery_status_badge.dart
+│   │   │   ├── controllers/
+│   │   │   │   ├── vendor_dashboard_controller.dart
+│   │   │   │   └── vendor_order_controller.dart
+│   │   │   └── services/
+│   │   │       ├── vendor_service.dart
+│   │   │       └── delivery_service.dart
+│   │   │
+│   │   ├── admin/
+│   │   │   ├── models/
+│   │   │   │   ├── admin_stats.dart
+│   │   │   │   └── report_model.dart
+│   │   │   ├── screens/
+│   │   │   │   ├── admin_dashboard.dart
+│   │   │   │   ├── manage_users_screen.dart
+│   │   │   │   ├── manage_orders_screen.dart
+│   │   │   │   ├── reports_screen.dart
+│   │   │   │   └── payment_monitoring_screen.dart
+│   │   │   ├── widgets/
+│   │   │   │   ├── stats_card.dart
+│   │   │   │   ├── user_list_tile.dart
+│   │   │   │   └── report_download_button.dart
+│   │   │   ├── controllers/
+│   │   │   │   ├── admin_dashboard_controller.dart
+│   │   │   │   └── user_management_controller.dart
+│   │   │   └── services/
+│   │   │       ├── admin_service.dart
+│   │   │       └── report_service.dart
+│   │   │
+│   │   └── chat/
+│   │       ├── models/
+│   │       │   └── chat_message_model.dart
+│   │       ├── screens/
+│   │       │   └── chat_screen.dart
+│   │       ├── widgets/
+│   │       │   ├── message_bubble.dart
+│   │       │   └── chat_input_field.dart
+│   │       ├── controllers/
+│   │       │   └── chat_controller.dart
+│   │       └── services/
+│   │           └── chat_service.dart
+│   │
+│   ├── shared/                         # Shared across modules
+│   │   ├── widgets/
+│   │   │   ├── custom_button.dart
+│   │   │   ├── custom_text_field.dart
+│   │   │   ├── loading_indicator.dart
+│   │   │   ├── app_bar_widget.dart
+│   │   │   └── bottom_nav_bar.dart
+│   │   ├── dialogs/
+│   │   │   ├── confirmation_dialog.dart
+│   │   │   └── success_dialog.dart
+│   │   └── mixins/
+│   │       ├── loading_mixin.dart
+│   │       └── error_handler_mixin.dart
+│   │
+│   ├── config/                          # Configuration
+│   │   ├── supabase/
+│   │   │   ├── supabase_client.dart
+│   │   │   ├── supabase_tables.dart
+│   │   │   └── supabase_realtime.dart
+│   │   ├── routes/
+│   │   │   ├── app_routes.dart
+│   │   │   └── route_generator.dart
+│   │   └── env/
+│   │       ├── environment.dart
+│   │       └── env_config.dart
+│   │
+│   └── localization/                    # Multi-language
+│       ├── app_localizations.dart
+│       ├── language_provider.dart
+│       └── languages.dart
+│
+├── assets/
+│   ├── images/
+│   ├── fonts/
+│   └── translations/
+│       ├── en.json
+│       └── sw.json
+│
+├── test/
+│   ├── modules/
+│   │   ├── auth_test.dart
+│   │   ├── customer_test.dart
+│   │   └── vendor_test.dart
+│   └── helpers/
+│
+├── pubspec.yaml
+└── README.md
