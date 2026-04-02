@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'app_routes.dart';
 import '../../modules/auth/screens/splash_screen.dart';
+import '../../modules/auth/screens/role_selection_screen.dart';
 import '../../modules/auth/screens/login_screen.dart';
 import '../../modules/auth/screens/register_screen.dart';
+import '../../modules/auth/screens/customer_registration_screen.dart';
+import '../../modules/auth/screens/vendor_registration_screen.dart';
 import '../../modules/auth/screens/forgot_password_screen.dart';
 import '../../modules/customer/screens/home_screen.dart';
-import '../../modules/customer/screens/request_water_screen.dart';
 import '../../modules/customer/screens/vendor_list_screen.dart';
-import '../../modules/customer/screens/order_confirmation_screen.dart';
+import '../../modules/customer/screens/order_placement_screen.dart';
 import '../../modules/customer/screens/order_tracking_screen.dart';
 import '../../modules/customer/screens/payment_screen.dart';
 import '../../modules/customer/screens/order_history_screen.dart';
@@ -32,10 +34,23 @@ class RouteGenerator {
       // Auth routes
       case AppRoutes.splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
+      case AppRoutes.roleSelection:
+        return MaterialPageRoute(builder: (_) => const RoleSelectionScreen());
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case AppRoutes.register:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final role = args?['role'] as String?;
+        if (role == 'customer') {
+          return MaterialPageRoute(builder: (_) => const CustomerRegistrationScreen());
+        } else if (role == 'vendor') {
+          return MaterialPageRoute(builder: (_) => const VendorRegistrationScreen());
+        }
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case AppRoutes.customerRegister:
+        return MaterialPageRoute(builder: (_) => const CustomerRegistrationScreen());
+      case AppRoutes.vendorRegister:
+        return MaterialPageRoute(builder: (_) => const VendorRegistrationScreen());
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       
@@ -43,11 +58,9 @@ class RouteGenerator {
       case AppRoutes.customerHome:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case AppRoutes.requestWater:
-        return MaterialPageRoute(builder: (_) => const RequestWaterScreen());
+        return MaterialPageRoute(builder: (_) => const OrderPlacementScreen());
       case AppRoutes.vendorList:
         return MaterialPageRoute(builder: (_) => const VendorListScreen());
-      case AppRoutes.orderConfirmation:
-        return MaterialPageRoute(builder: (_) => const OrderConfirmationScreen());
       case AppRoutes.orderTracking:
         return MaterialPageRoute(builder: (_) => const OrderTrackingScreen());
       case AppRoutes.payment:

@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 class CustomTextField extends StatefulWidget {
   final String label;
   final String? hint;
+  final String? hintText;
   final TextEditingController? controller;
   final bool isPassword;
   final bool isEmail;
   final bool isPhone;
+  final bool isNumber;
   final String? Function(String?)? validator;
   final TextInputType keyboardType;
   final IconData? prefixIcon;
@@ -21,10 +23,12 @@ class CustomTextField extends StatefulWidget {
     super.key,
     required this.label,
     this.hint,
+    this.hintText,
     this.controller,
     this.isPassword = false,
     this.isEmail = false,
     this.isPhone = false,
+    this.isNumber = false,
     this.validator,
     this.keyboardType = TextInputType.text,
     this.prefixIcon,
@@ -62,7 +66,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       maxLength: widget.maxLength,
       decoration: InputDecoration(
         labelText: widget.label,
-        hintText: widget.hint,
+        hintText: widget.hintText ?? widget.hint,
         prefixIcon: widget.prefixIcon != null
             ? Icon(widget.prefixIcon, size: 20)
             : null,
@@ -116,6 +120,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
   TextInputType _getKeyboardType() {
     if (widget.isEmail) return TextInputType.emailAddress;
     if (widget.isPhone) return TextInputType.phone;
+    if (widget.isNumber) return TextInputType.number;
     return widget.keyboardType;
   }
   

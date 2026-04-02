@@ -210,6 +210,14 @@ create policy "users_select_self_or_admin"
 on public.users for select
 using (id = auth.uid() or public.is_admin());
 
+create policy "users_insert_self"
+on public.users for insert
+with check (id = auth.uid());
+
+create policy "users_insert_admin"
+on public.users for insert
+with check (public.is_admin());
+
 create policy "users_update_self_or_admin"
 on public.users for update
 using (id = auth.uid() or public.is_admin())

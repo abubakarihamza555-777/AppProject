@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'config/supabase/supabase_client.dart';
 import 'config/routes/app_routes.dart';
 import 'config/routes/route_generator.dart';
 import 'localization/language_provider.dart';
 import 'modules/auth/controllers/auth_controller.dart';
+import 'modules/customer/controllers/home_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +26,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => AuthController()),
+        ChangeNotifierProvider(create: (_) => HomeController()),
       ],
       child: Consumer<LanguageProvider>(
         builder: (context, languageProvider, child) {
@@ -34,6 +37,11 @@ class MyApp extends StatelessWidget {
             supportedLocales: const [
               Locale('en'),
               Locale('sw'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
             ],
             theme: ThemeData(
               primarySwatch: Colors.blue,

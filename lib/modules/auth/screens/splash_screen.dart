@@ -23,24 +23,34 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final authController = context.read<AuthController>();
 
+    // Check if user is authenticated in Supabase
     if (authController.isAuthenticated()) {
-      final user = authController.currentUser;
-      if (user != null) {
-        switch (user.role) {
-          case 'customer':
-            Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
-            return;
-          case 'vendor':
-            Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
-            return;
-          case 'admin':
-            Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
-            return;
+      try {
+        // Load user data
+        await authController.loadCurrentUser();
+        final user = authController.currentUser;
+        
+        if (user != null) {
+          switch (user.role) {
+            case 'customer':
+              Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
+              return;
+            case 'vendor':
+              Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
+              return;
+            case 'admin':
+              Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
+              return;
+          }
         }
+      } catch (e) {
+        print('Error loading user data: $e');
+        // If there's an error loading user data, go to role selection
       }
     }
 
-    Navigator.pushReplacementNamed(context, AppRoutes.login);
+    // Navigate to role selection for new users
+    Navigator.pushReplacementNamed(context, AppRoutes.roleSelection);
   }
 
   @override

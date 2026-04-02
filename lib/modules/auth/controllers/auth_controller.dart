@@ -50,6 +50,7 @@ class AuthController extends ChangeNotifier {
     required String fullName,
     required String phone,
     required String role,
+    Map<String, dynamic>? additionalData,
   }) async {
     _setLoading(true);
     _clearError();
@@ -61,6 +62,7 @@ class AuthController extends ChangeNotifier {
         fullName: fullName,
         phone: phone,
         role: role,
+        additionalData: additionalData,
       );
       
       if (user != null) {
@@ -90,6 +92,18 @@ class AuthController extends ChangeNotifier {
   // Check if user is authenticated
   bool isAuthenticated() {
     return _authService.isAuthenticated();
+  }
+  
+  // Load current user data
+  Future<void> loadCurrentUser() async {
+    try {
+      _currentUser = await _authService.getCurrentUser();
+      notifyListeners();
+    } catch (e) {
+      print('Error loading current user: $e');
+      _currentUser = null;
+      notifyListeners();
+    }
   }
   
   void _setLoading(bool value) {

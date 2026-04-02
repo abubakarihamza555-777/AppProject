@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -28,7 +29,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final auth = context.read<AuthController>();
+    setState(() {
+      _isLoading = true;
+    });
     final ok = await auth.signIn(email: _email.text.trim(), password: _password.text);
+    setState(() {
+      _isLoading = false;
+    });
     if (!mounted) return;
 
     if (!ok) {
@@ -57,48 +64,139 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                CustomTextField(
-                  controller: _email,
-                  label: 'Email',
-                  isEmail: true,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Email is required' : null,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 40),
+              // App Logo/Icon
+              Icon(
+                Icons.water_drop,
+                size: 80,
+                color: Theme.of(context).primaryColor,
+              ),
+              const SizedBox(height: 20),
+              
+              // Welcome Title
+              const Text(
+                'Karibu Dar Water App',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
-                const SizedBox(height: 12),
-                CustomTextField(
-                  controller: _password,
-                  label: 'Password',
-                  isPassword: true,
-                  validator: (v) => (v == null || v.isEmpty) ? 'Password is required' : null,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              
+              const Text(
+                'Ingia kwa kutumia email au namba ya simu uliyosajili',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
                 ),
-                const SizedBox(height: 16),
-                CustomButton(
-                  text: 'Sign in',
-                  isLoading: auth.isLoading,
-                  onPressed: () {
-                    if (!auth.isLoading) {
-                      _submit();
-                    }
-                  },
+                textAlign: TextAlign.center,
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Login Form
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
-                  child: const Text('Forgot password?'),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // Email/Phone Field
+                      CustomTextField(
+                        label: 'Barua Pepe au Namba ya Simu',
+                        controller: _email,
+                        prefixIcon: Icons.email_outlined,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Tafadhali weka barua pepe au namba ya simu';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Password Field
+                      CustomTextField(
+                        label: 'Neno Siri',
+                        controller: _password,
+                        isPassword: true,
+                        prefixIcon: Icons.lock_outline,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Tafadhali weka neno siri';
+                          }
+                          return null;
+                        },
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Login Button
+                      CustomButton(
+                        text: 'INGIA',
+                        onPressed: _isLoading || auth.isLoading 
+                            ? null 
+                            : _submit,
+                        isLoading: _isLoading || auth.isLoading,
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Forgot Password
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, AppRoutes.forgotPassword);
+                        },
+                        child: const Text('Umesahau neno siri?'),
+                      ),
+                    ],
+                  ),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
-                  child: const Text('Create account'),
-                ),
-              ],
-            ),
+              ),
+              
+              const SizedBox(height: 30),
+              
+              // Register Link
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Huna akaunti?',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, AppRoutes.roleSelection);
+                    },
+                    child: const Text('Jisajili'),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 20),
+            ],
           ),
         ),
       ),

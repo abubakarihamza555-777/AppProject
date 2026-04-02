@@ -54,18 +54,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (success && mounted) {
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
+        // Show success message first
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Please login.'),
+            content: Text('Registration successful! Redirecting to login...'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
+        
+        // Navigate after a short delay to show the message
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, AppRoutes.login);
+          }
+        });
       } else if (mounted) {
+        String errorMessage = authController.errorMessage ?? 'Registration failed';
+        
+        // Provide more user-friendly error messages
+        if (errorMessage.contains('duplicate key')) {
+          errorMessage = 'An account with this email already exists';
+        } else if (errorMessage.contains('rate limit')) {
+          errorMessage = 'Too many registration attempts. Please try again later';
+        } else if (errorMessage.contains('invalid email')) {
+          errorMessage = 'Please enter a valid email address';
+        } else if (errorMessage.contains('weak password')) {
+          errorMessage = 'Password is too weak. Please choose a stronger password';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authController.errorMessage ?? 'Registration failed'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Dismiss',
+              textColor: Colors.white,
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
           ),
         );
       }
