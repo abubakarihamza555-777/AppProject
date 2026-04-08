@@ -5,7 +5,7 @@ import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../localization/language_provider.dart';
-import '../../../shared/services/location_service.dart';
+import '../../../core/services/location_service.dart';
 import '../controllers/vendor_profile_controller.dart';
 
 class VendorProfileCompletionScreen extends StatefulWidget {

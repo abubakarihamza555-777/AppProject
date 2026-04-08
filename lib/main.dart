@@ -5,6 +5,8 @@ import 'config/supabase/supabase_client.dart';
 import 'config/routes/app_routes.dart';
 import 'config/routes/route_generator.dart';
 import 'localization/language_provider.dart';
+import 'localization/languages.dart';
+import 'core/theme/theme_provider.dart';
 import 'modules/auth/controllers/auth_controller.dart';
 import 'modules/customer/controllers/home_controller.dart';
 
@@ -13,6 +15,9 @@ void main() async {
   
   // Initialize Supabase
   await SupabaseConfig.initialize();
+  
+  // Load translations
+  await Languages.loadTranslations();
   
   runApp(const MyApp());
 }
@@ -24,12 +29,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => HomeController()),
       ],
-      child: Consumer<LanguageProvider>(
-        builder: (context, languageProvider, child) {
+      child: Consumer2<LanguageProvider, ThemeProvider>(
+        builder: (context, languageProvider, themeProvider, child) {
           return MaterialApp(
             title: 'Water Delivery',
             debugShowCheckedModeBanner: false,
@@ -43,11 +49,9 @@ class MyApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              fontFamily: 'Poppins',
-              useMaterial3: true,
-            ),
+            theme: themeProvider.lightTheme,
+            darkTheme: themeProvider.darkTheme,
+            themeMode: themeProvider.themeMode,
             initialRoute: AppRoutes.splash,
             onGenerateRoute: RouteGenerator.generateRoute,
           );

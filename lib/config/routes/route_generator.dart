@@ -7,13 +7,14 @@ import '../../modules/auth/screens/register_screen.dart';
 import '../../modules/auth/screens/customer_registration_screen.dart';
 import '../../modules/auth/screens/vendor_registration_screen.dart';
 import '../../modules/auth/screens/forgot_password_screen.dart';
-import '../../modules/customer/screens/home_screen.dart';
-import '../../modules/customer/screens/order_placement_screen.dart';
-import '../../modules/customer/screens/order_tracking_screen.dart';
+import '../../modules/auth/screens/registration_success_screen.dart';
+import '../../modules/customer/screens/premium_home_screen.dart';
+import '../../modules/customer/screens/modern_order_screen.dart';
+import '../../modules/customer/screens/premium_order_tracking_screen.dart';
 import '../../modules/customer/screens/payment_screen.dart';
 import '../../modules/customer/screens/order_history_screen.dart';
 import '../../modules/customer/screens/profile_screen.dart';
-import '../../modules/vendor/screens/vendor_dashboard.dart';
+import '../../modules/vendor/screens/premium_vendor_dashboard.dart';
 import '../../modules/vendor/screens/incoming_orders_screen.dart';
 import '../../modules/vendor/screens/active_deliveries_screen.dart';
 import '../../modules/vendor/screens/order_details_screen.dart';
@@ -52,14 +53,22 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const VendorRegistrationScreen());
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+      case AppRoutes.registrationSuccess:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => RegistrationSuccessScreen(
+            userRole: args?['userRole'] ?? 'customer',
+            userName: args?['userName'] ?? 'User',
+          ),
+        );
       
       // Customer routes
       case AppRoutes.customerHome:
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
+        return MaterialPageRoute(builder: (_) => const PremiumHomeScreen());
       case AppRoutes.requestWater:
-        return MaterialPageRoute(builder: (_) => const OrderPlacementScreen());
+        return MaterialPageRoute(builder: (_) => const ModernOrderScreen());
       case AppRoutes.orderTracking:
-        return MaterialPageRoute(builder: (_) => const OrderTrackingScreen());
+        return MaterialPageRoute(builder: (_) => const PremiumOrderTrackingScreen());
       case AppRoutes.payment:
         return MaterialPageRoute(builder: (_) => const PaymentScreen());
       case AppRoutes.orderHistory:
@@ -69,7 +78,7 @@ class RouteGenerator {
       
       // Vendor routes
       case AppRoutes.vendorDashboard:
-        return MaterialPageRoute(builder: (_) => const VendorDashboard());
+        return MaterialPageRoute(builder: (_) => const PremiumVendorDashboard());
       case AppRoutes.incomingOrders:
         return MaterialPageRoute(builder: (_) => const IncomingOrdersScreen());
       case AppRoutes.activeDeliveries:

@@ -83,6 +83,8 @@ class HomeController extends ChangeNotifier {
             'business_address': 'Ilala, Dar es Salaam',
             'service_areas': [districtId],
             'vehicle_type': 'medium_truck',
+            'min_capacity': 3000,
+            'max_capacity': 5000,
           },
           {
             'id': '2', 
@@ -97,6 +99,8 @@ class HomeController extends ChangeNotifier {
             'business_address': 'Temeke, Dar es Salaam',
             'service_areas': [districtId],
             'vehicle_type': 'towable',
+            'min_capacity': 400,
+            'max_capacity': 2000,
           },
         ];
       } catch (e) {
@@ -126,6 +130,8 @@ class HomeController extends ChangeNotifier {
             'business_address': 'Ilala, Dar es Salaam',
             'service_areas': [1, 2],
             'vehicle_type': 'medium_truck',
+            'min_capacity': 3000,
+            'max_capacity': 5000,
           },
           {
             'id': '2',
@@ -140,6 +146,8 @@ class HomeController extends ChangeNotifier {
             'business_address': 'Temeke, Dar es Salaam',
             'service_areas': [1, 2],
             'vehicle_type': 'towable',
+            'min_capacity': 400,
+            'max_capacity': 2000,
           },
           {
             'id': '3',
@@ -154,6 +162,8 @@ class HomeController extends ChangeNotifier {
             'business_address': 'Ilala, Dar es Salaam',
             'service_areas': [1, 2],
             'vehicle_type': 'heavy_truck',
+            'min_capacity': 8000,
+            'max_capacity': 16000,
           },
         ];
       } catch (e) {
@@ -164,6 +174,30 @@ class HomeController extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  // Check if vendor can handle the requested quantity
+  bool canVendorHandleQuantity(Map<String, dynamic> vendor, int requiredLiters) {
+    final minCapacity = vendor['min_capacity'] as int? ?? 0;
+    final maxCapacity = vendor['max_capacity'] as int? ?? 0;
+    return requiredLiters >= minCapacity && requiredLiters <= maxCapacity;
+  }
+
+  // Get filtered vendors based on quantity requirement
+  List<Map<String, dynamic>> getVendorsForQuantity(int requiredLiters) {
+    return availableVendors.where((vendor) => 
+      canVendorHandleQuantity(vendor, requiredLiters)
+    ).toList();
+  }
+
+  // Get vehicle capacity info
+  Map<String, dynamic> getVehicleCapacityInfo(String vehicleType) {
+    final capacities = {
+      'towable': {'min': 400, 'max': 2000, 'name': 'Towable Browser'},
+      'medium_truck': {'min': 3000, 'max': 5000, 'name': 'Medium Truck'},
+      'heavy_truck': {'min': 8000, 'max': 16000, 'name': 'Heavy Duty Truck'},
+    };
+    return capacities[vehicleType] ?? {'min': 0, 'max': 0, 'name': 'Unknown'};
   }
 
   // Get customer location display

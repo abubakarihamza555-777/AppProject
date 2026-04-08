@@ -6,6 +6,7 @@ class AppRoutes {
   static const String customerRegister = '/customer-register';
   static const String vendorRegister = '/vendor-register';
   static const String forgotPassword = '/forgot-password';
+  static const String registrationSuccess = '/registration-success';
   
   // Customer routes
   static const String customerHome = '/customer/home';
