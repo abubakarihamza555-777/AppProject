@@ -13,6 +13,7 @@ class OrderModel {
   final String? trackingNumber;
   final Map<String, dynamic>? vendorDetails;
   final Map<String, dynamic>? customerDetails;
+  final String? serviceType; // 'small' or 'large' car tank
   
   OrderModel({
     required this.id,
@@ -29,6 +30,7 @@ class OrderModel {
     this.trackingNumber,
     this.vendorDetails,
     this.customerDetails,
+    this.serviceType,
   });
   
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -49,6 +51,7 @@ class OrderModel {
       trackingNumber: json['tracking_number'] as String?,
       vendorDetails: json['vendors'] as Map<String, dynamic>?,
       customerDetails: json['customers'] as Map<String, dynamic>?,
+      serviceType: json['service_type'] as String?,
     );
   }
   
@@ -66,6 +69,7 @@ class OrderModel {
       'created_at': orderDate.toIso8601String(),
       'delivery_date': deliveryDate?.toIso8601String(),
       'tracking_number': trackingNumber,
+      'service_type': serviceType,
     };
   }
   

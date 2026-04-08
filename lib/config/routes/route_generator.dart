@@ -8,7 +8,6 @@ import '../../modules/auth/screens/customer_registration_screen.dart';
 import '../../modules/auth/screens/vendor_registration_screen.dart';
 import '../../modules/auth/screens/forgot_password_screen.dart';
 import '../../modules/customer/screens/home_screen.dart';
-import '../../modules/customer/screens/vendor_list_screen.dart';
 import '../../modules/customer/screens/order_placement_screen.dart';
 import '../../modules/customer/screens/order_tracking_screen.dart';
 import '../../modules/customer/screens/payment_screen.dart';
@@ -59,8 +58,6 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case AppRoutes.requestWater:
         return MaterialPageRoute(builder: (_) => const OrderPlacementScreen());
-      case AppRoutes.vendorList:
-        return MaterialPageRoute(builder: (_) => const VendorListScreen());
       case AppRoutes.orderTracking:
         return MaterialPageRoute(builder: (_) => const OrderTrackingScreen());
       case AppRoutes.payment:

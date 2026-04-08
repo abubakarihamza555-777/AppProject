@@ -5,7 +5,8 @@ import '../../../shared/widgets/bottom_nav_bar.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../localization/language_provider.dart';
 import '../controllers/home_controller.dart';
-import '../widgets/water_card.dart';
+import '../widgets/delivery_service_card.dart';
+import '../widgets/vendor_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,8 +26,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     final controller = context.read<HomeController>();
-    await controller.loadWaterTypes();
+    await controller.loadDeliveryServices();
     await controller.loadRecentOrders();
+    // Load vendors (will show all if no location set)
+    await controller.loadVendorsByLocation();
   }
 
   @override
@@ -65,8 +68,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColorDark,
+                      Colors.blue.shade600,
+                      Colors.blue.shade800,
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -74,6 +77,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: Colors.white70,
+                          size: 16,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Dar es Salaam',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
                     Text(
                       '${languageProvider.translate('welcome')}, ${controller.userName}',
                       style: const TextStyle(
@@ -84,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      languageProvider.translate('order_water'),
+                      'Get clean water delivered to your doorstep',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.white70,
@@ -97,18 +118,47 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.blue.shade700,
                       ),
-                      child: Text(languageProvider.translate('order_now')),
+                      child: Text('Request Water Delivery'),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Quick Info Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.blue.shade700,
+                      size: 20,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Professional water delivery using car tanks throughout Dar es Salaam. Fast, reliable service.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Popular Water Types
+              // Water Delivery Services
               Text(
-                languageProvider.translate('popular_water'),
+                'Water Delivery Services - Dar es Salaam',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -118,18 +168,19 @@ class _HomeScreenState extends State<HomeScreen> {
               controller.isLoading
                   ? const LoadingIndicator()
                   : SizedBox(
-                      height: 180,
+                      height: 240,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: controller.waterTypes.length,
+                        itemCount: controller.deliveryServices.length,
                         itemBuilder: (context, index) {
-                          return WaterCard(
-                            waterType: controller.waterTypes[index],
+                          final service = controller.deliveryServices[index];
+                          return DeliveryServiceCard(
+                            service: service,
                             onTap: () {
                               Navigator.pushNamed(
                                 context,
                                 AppRoutes.requestWater,
-                                arguments: controller.waterTypes[index],
+                                arguments: service,
                               );
                             },
                           );
@@ -138,9 +189,79 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
               const SizedBox(height: 24),
 
+              // Available Vendors
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Available Vendors in ${controller.getCustomerLocationDisplay()}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      // TODO: Navigate to vendor list or filters
+                    },
+                    icon: const Icon(Icons.filter_list, size: 16),
+                    label: const Text('View All', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              controller.isLoadingVendors
+                  ? const LoadingIndicator()
+                  : controller.availableVendors.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(40),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.store_outlined,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No vendors available in your area',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Try setting your location in profile',
+                                  style: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: controller.availableVendors.length,
+                          itemBuilder: (context, index) {
+                            final vendor = controller.availableVendors[index];
+                            return VendorCard(
+                              vendor: vendor,
+                              onTap: () {
+                                // TODO: Navigate to vendor details
+                              },
+                            );
+                          },
+                        ),
+              const SizedBox(height: 24),
+
               // Recent Orders
               Text(
-                languageProvider.translate('recent_orders'),
+                'Recent Water Deliveries',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -152,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(40),
                         child: Text(
-                          languageProvider.translate('no_orders'),
+                          'No recent deliveries',
                           style: TextStyle(
                             color: Colors.grey[600],
                           ),
@@ -168,10 +289,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
-                            leading: const Icon(Icons.local_drink),
-                            title: Text(order.waterType),
+                            leading: Icon(
+                              order.serviceType == 'small' ? Icons.directions_car : Icons.local_shipping,
+                              color: Colors.blue,
+                            ),
+                            title: Text('${order.serviceType?.toUpperCase() ?? 'CAR'} Tank Delivery'),
                             subtitle: Text(
-                              '${order.quantity} L - ${order.getStatusText(languageProvider.currentLocale.languageCode)}',
+                              '${order.quantity} L - ${order.getStatusText('en')}',
                             ),
                             trailing: Text('TZS ${order.totalPrice}'),
                             onTap: () {

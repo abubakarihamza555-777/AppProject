@@ -16,6 +16,7 @@ class AppRoutes {
   static const String payment = '/customer/payment';
   static const String orderHistory = '/customer/order-history';
   static const String profile = '/customer/profile';
+  static const String customerProfileCompletion = '/customer/profile-completion';
   
   // Vendor routes
   static const String vendorDashboard = '/vendor/dashboard';
@@ -24,6 +25,7 @@ class AppRoutes {
   static const String orderDetails = '/vendor/order-details';
   static const String vendorEarnings = '/vendor/earnings';
   static const String vendorProfile = '/vendor/profile';
+  static const String vendorProfileCompletion = '/vendor/profile-completion';
   
   // Admin routes
   static const String adminDashboard = '/admin/dashboard';

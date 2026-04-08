@@ -1,30 +1,159 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/vendor_service.dart';
 import '../models/vendor_model.dart';
 
 class VendorProfileController extends ChangeNotifier {
   final VendorService _vendorService = VendorService();
+  final supabase = Supabase.instance.client;
   
   bool _isLoading = false;
   VendorModel? _vendorProfile;
   bool _isEditing = false;
+  String _errorMessage = '';
+  Map<String, dynamic> _profileData = {};
   
   bool get isLoading => _isLoading;
   VendorModel? get vendorProfile => _vendorProfile;
   bool get isEditing => _isEditing;
+  String get errorMessage => _errorMessage;
+  Map<String, dynamic> get profileData => _profileData;
   
-  Future<void> loadVendorProfile(String vendorId) async {
+  // Calculate profile completion percentage
+  int calculateCompletionPercentage(Map<String, dynamic> data) {
+    int completed = 0;
+    int total = 7; // Total fields to complete
+    
+    if (data['business_name'] != null && data['business_name'].toString().isNotEmpty) completed++;
+    if (data['business_phone'] != null && data['business_phone'].toString().isNotEmpty) completed++;
+    if (data['business_address'] != null && data['business_address'].toString().isNotEmpty) completed++;
+    if (data['business_license'] != null && data['business_license'].toString().isNotEmpty) completed++;
+    if (data['vehicle_type'] != null && data['vehicle_type'].toString().isNotEmpty) completed++;
+    if (data['max_liters_per_trip'] != null && data['max_liters_per_trip'] > 0) completed++;
+    
+    return ((completed / total) * 100).round();
+  }
+  
+  // Load vendor profile
+  Future<void> loadVendorProfile(String? vendorId) async {
     _setLoading(true);
     
     try {
-      _vendorProfile = await _vendorService.getVendorById(vendorId);
+      if (vendorId != null) {
+        _vendorProfile = await _vendorService.getVendorById(vendorId);
+      } else {
+        // Load by current user ID
+        final userId = supabase.auth.currentUser?.id;
+        if (userId != null) {
+          final response = await supabase
+              .from('vendors')
+              .select('*')
+              .eq('user_id', userId)
+              .maybeSingle();
+          
+          if (response != null) {
+            _profileData = Map<String, dynamic>.from(response);
+          }
+        }
+      }
     } catch (e) {
+      _errorMessage = e.toString();
       print('Error loading vendor profile: $e');
     } finally {
       _setLoading(false);
     }
   }
   
+  // Update vendor profile with new fields
+  Future<Map<String, dynamic>> updateVendorProfile({
+    String? businessName,
+    String? businessPhone,
+    String? businessAddress,
+    String? businessLicense,
+    String? profileImage,
+    String? vehicleType,
+    int? maxLitersPerTrip,
+  }) async {
+    _setLoading(true);
+    
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      final updateData = <String, dynamic>{
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      
+      if (businessName != null) updateData['business_name'] = businessName;
+      if (businessPhone != null) updateData['business_phone'] = businessPhone;
+      if (businessAddress != null) updateData['business_address'] = businessAddress;
+      if (businessLicense != null) updateData['business_license'] = businessLicense;
+      if (profileImage != null) updateData['profile_image'] = profileImage;
+      if (vehicleType != null) updateData['vehicle_type'] = vehicleType;
+      if (maxLitersPerTrip != null) updateData['max_liters_per_trip'] = maxLitersPerTrip;
+      
+      // Check if profile exists
+      final existingProfile = await supabase
+          .from('vendors')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+      
+      Map<String, dynamic> result;
+      
+      if (existingProfile != null) {
+        // Update existing profile
+        result = await supabase
+            .from('vendors')
+            .update(updateData)
+            .eq('user_id', userId)
+            .select()
+            .single();
+      } else {
+        // Create new profile
+        final newProfileData = {
+          ...updateData,
+          'user_id': userId,
+          'rating': 0.0,
+          'total_deliveries': 0,
+          'is_active': true,
+          'is_verified': false,
+          'created_at': DateTime.now().toIso8601String(),
+        };
+        
+        result = await supabase
+            .from('vendors')
+            .insert(newProfileData)
+            .select()
+            .single();
+      }
+      
+      _profileData = Map<String, dynamic>.from(result);
+      
+      // Check if profile is complete
+      int completionPercentage = calculateCompletionPercentage(_profileData);
+      
+      return {
+        'success': true,
+        'data': result,
+        'completion_percentage': completionPercentage,
+        'is_complete': completionPercentage == 100,
+      };
+      
+    } catch (e) {
+      _errorMessage = e.toString();
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    } finally {
+      _setLoading(false);
+    }
+  }
+  
+  // Legacy update method for backward compatibility
   Future<bool> updateProfile({
     String? businessName,
     String? businessPhone,
@@ -75,8 +204,51 @@ class VendorProfileController extends ChangeNotifier {
     }
   }
   
+  // Get vehicle type details
+  Map<String, dynamic> getVehicleTypeDetails(String vehicleType) {
+    final vehicleTypes = {
+      'towable': {
+        'name': 'Towable Browser',
+        'description': '400-2000 Liters capacity',
+        'icon': 'agriculture',
+        'color': 'orange',
+        'min_liters': 400,
+        'max_liters': 2000,
+      },
+      'medium_truck': {
+        'name': 'Medium Truck',
+        'description': '3000-5000 Liters capacity',
+        'icon': 'local_shipping',
+        'color': 'blue',
+        'min_liters': 3000,
+        'max_liters': 5000,
+      },
+      'heavy_truck': {
+        'name': 'Heavy Duty Truck',
+        'description': '8000-16000 Liters capacity',
+        'icon': 'airport_shuttle',
+        'color': 'purple',
+        'min_liters': 8000,
+        'max_liters': 16000,
+      },
+    };
+    
+    return vehicleTypes[vehicleType] ?? vehicleTypes['towable']!;
+  }
+  
+  // Validate vehicle capacity
+  bool validateVehicleCapacity(String vehicleType, int capacity) {
+    final details = getVehicleTypeDetails(vehicleType);
+    return capacity >= details['min_liters'] && capacity <= details['max_liters'];
+  }
+  
   void toggleEditing() {
     _isEditing = !_isEditing;
+    notifyListeners();
+  }
+  
+  void clearError() {
+    _errorMessage = '';
     notifyListeners();
   }
   
