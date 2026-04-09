@@ -35,7 +35,7 @@ class DeliveryServiceCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _getVehicleColor().withOpacity(0.1),
+                color: _getVehicleColor().withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(

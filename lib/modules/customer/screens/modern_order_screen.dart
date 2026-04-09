@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../config/routes/app_routes.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
-import '../../../localization/language_provider.dart';
 import '../controllers/home_controller.dart';
-import '../models/order_model.dart';
 
 class ModernOrderScreen extends StatefulWidget {
   const ModernOrderScreen({super.key});
@@ -33,10 +30,6 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
   String? _selectedVendorId;
   Map<String, dynamic>? _selectedVendor;
   bool _useAlternativeAddress = false;
-  bool _isAsapDelivery = true;
-  DateTime? _scheduledDateTime;
-  String _paymentMethod = 'cash';
-  int _currentSection = 0;
   
   // Vehicle type icons and colors
   final Map<String, Map<String, dynamic>> _vehicleTypes = {
@@ -716,7 +709,7 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                 ),
                 child: Column(
                   children: [
-                    RadioListTile<bool>(
+                    ListTile(
                       title: Text(
                         'Tumia anwani yangu iliyosajiliwa',
                         style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
@@ -725,17 +718,24 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                         'Inatumia anwani ya kawaida ya kupelekea',
                         style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600),
                       ),
-                      value: false,
-                      groupValue: _useAlternativeAddress,
-                      onChanged: (value) {
+                      trailing: Radio<bool>(
+                        value: false,
+                        groupValue: _useAlternativeAddress,
+                        onChanged: (value) {
+                          setState(() {
+                            _useAlternativeAddress = value!;
+                          });
+                        },
+                        fillColor: WidgetStateProperty.all(Colors.green.shade600),
+                      ),
+                      onTap: () {
                         setState(() {
-                          _useAlternativeAddress = value!;
+                          _useAlternativeAddress = false;
                         });
                       },
-                      activeColor: Colors.green.shade600,
                     ),
                     
-                    RadioListTile<bool>(
+                    ListTile(
                       title: Text(
                         'Tumia anwani nyingine',
                         style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
@@ -744,14 +744,21 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                         'Toa mahali mbadala pa kufikishia',
                         style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600),
                       ),
-                      value: true,
-                      groupValue: _useAlternativeAddress,
-                      onChanged: (value) {
+                      trailing: Radio<bool>(
+                        value: true,
+                        groupValue: _useAlternativeAddress,
+                        onChanged: (value) {
+                          setState(() {
+                            _useAlternativeAddress = value!;
+                          });
+                        },
+                        fillColor: WidgetStateProperty.all(Colors.green.shade600),
+                      ),
+                      onTap: () {
                         setState(() {
-                          _useAlternativeAddress = value!;
+                          _useAlternativeAddress = true;
                         });
                       },
-                      activeColor: Colors.green.shade600,
                     ),
                   ],
                 ),
@@ -964,7 +971,9 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
     // Simulate order placement
     await Future.delayed(const Duration(seconds: 2));
     
-    Navigator.pop(context); // Close loading dialog
+    if (mounted) {
+      Navigator.pop(context); // Close loading dialog
+    }
     
     // Show success dialog
     showDialog(
@@ -1013,7 +1022,9 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to home
+              if (mounted) {
+                Navigator.pop(context); // Go back to home
+              }
             },
             child: Text(
               'Sawa',

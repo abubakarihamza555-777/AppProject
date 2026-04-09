@@ -135,8 +135,8 @@ class _ManageUsersScreenState extends State<ManageUsersScreen>
                                 ),
                                 decoration: BoxDecoration(
                                   color: vendor.isVerified
-                                      ? Colors.green.withOpacity(0.1)
-                                      : Colors.orange.withOpacity(0.1),
+                                      ? Colors.green.withValues(alpha: 0.1)
+                                      : Colors.orange.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(

@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../shared/widgets/bottom_nav_bar.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../localization/language_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../controllers/home_controller.dart';
-import '../widgets/delivery_service_card.dart';
-import '../widgets/vendor_card.dart';
 
 class PremiumHomeScreen extends StatefulWidget {
   const PremiumHomeScreen({super.key});
@@ -23,7 +20,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late AnimationController _fadeController;
-  late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
 
   @override
@@ -37,14 +33,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
-    _slideAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
     
     _fadeAnimation = Tween<double>(
       begin: 0.0,
@@ -514,7 +502,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
           // Rating
           Row(
             children: [
-              Icon(Icons.star, color: Colors.amber, size: 14),
+              const Icon(Icons.star, color: Colors.amber, size: 14),
               const SizedBox(width: 2),
               Text(
                 '${vendor['rating'] ?? 0.0}',

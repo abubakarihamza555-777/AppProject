@@ -131,7 +131,7 @@ class AuthService {
             'full_name': response.user!.userMetadata?['full_name'] ?? 'User',
             'phone': response.user!.userMetadata?['phone'] ?? '',
             'role': response.user!.userMetadata?['role'] ?? 'customer',
-            'created_at': response.user!.createdAt ?? DateTime.now().toIso8601String(),
+            'created_at': response.user!.createdAt,
             'is_active': true,
           };
           
@@ -172,7 +172,7 @@ class AuthService {
             'full_name': user.userMetadata?['full_name'] ?? 'User',
             'phone': user.userMetadata?['phone'] ?? '',
             'role': user.userMetadata?['role'] ?? 'customer',
-            'created_at': user.createdAt ?? DateTime.now().toIso8601String(),
+            'created_at': user.createdAt,
             'is_active': true,
           };
           

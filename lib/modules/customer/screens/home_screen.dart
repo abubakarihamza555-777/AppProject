@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    const Row(
                       children: [
                         Icon(
                           Icons.location_on,
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       '${languageProvider.translate('welcome')}, ${controller.userName}',
                       style: const TextStyle(
@@ -104,9 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    const Text(
                       'Get clean water delivered to your doorstep',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         color: Colors.white70,
                       ),
@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.blue.shade700,
                       ),
-                      child: Text('Request Water Delivery'),
+                      child: const Text('Request Water Delivery'),
                     ),
                   ],
                 ),
@@ -141,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.blue.shade700,
                       size: 20,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Professional water delivery using car tanks throughout Dar es Salaam. Fast, reliable service.',
@@ -157,9 +157,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
 
               // Water Delivery Services
-              Text(
+              const Text(
                 'Water Delivery Services - Dar es Salaam',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -260,9 +260,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
 
               // Recent Orders
-              Text(
+              const Text(
                 'Recent Water Deliveries',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),

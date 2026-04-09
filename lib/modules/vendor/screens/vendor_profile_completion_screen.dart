@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../localization/language_provider.dart';
 import '../../../core/services/location_service.dart';
-import '../controllers/vendor_profile_controller.dart';
 
 class VendorProfileCompletionScreen extends StatefulWidget {
   const VendorProfileCompletionScreen({super.key});
@@ -28,8 +25,15 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
   bool _isLoading = false;
   
   // Service area selection
-  List<int> _selectedDistricts = [];
-  List<int> _selectedWards = [];
+  final List<int> _selectedDistricts = [];
+  final List<int> _selectedWards = [];
+  
+  // Get districts and wards from LocationService
+  List<Map<String, dynamic>> get districtsList => LocationService.getDistricts();
+  
+  List<Map<String, dynamic>> getWardsForDistrict(int districtId) {
+    return LocationService.getWards(districtId);
+  }
 
   final List<Map<String, dynamic>> _vehicleTypes = [
     {
@@ -83,15 +87,20 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
-
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text('Complete Your Profile'),
-        subtitle: Text('$_completionPercentage% Complete'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Complete Your Profile'),
+            Text('$_completionPercentage% Complete', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+          ],
+        ),
         actions: [
           if (_completionPercentage == 100)
-            Icon(Icons.verified, color: Colors.green),
+            const Icon(Icons.verified, color: Colors.green),
         ],
       ),
       body: SingleChildScrollView(
@@ -115,7 +124,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
                     Row(
                       children: [
                         Icon(Icons.info_outline, color: Colors.blue.shade700),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           'Profile Completion',
                           style: TextStyle(
@@ -125,7 +134,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     LinearProgressIndicator(
                       value: _completionPercentage / 100,
                       backgroundColor: Colors.grey.shade300,
@@ -133,7 +142,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
                         _completionPercentage == 100 ? Colors.green : Colors.blue,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Complete your profile to start receiving orders',
                       style: TextStyle(
@@ -147,7 +156,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
               const SizedBox(height: 24),
 
               // Business Information
-              Text(
+              const Text(
                 'Business Information',
                 style: TextStyle(
                   fontSize: 18,
@@ -209,7 +218,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
               const SizedBox(height: 24),
 
               // Vehicle Type Selection
-              Text(
+              const Text(
                 'Select Your Vehicle Type',
                 style: TextStyle(
                   fontSize: 18,
@@ -271,7 +280,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
                             children: [
                               Text(
                                 vehicle['name'],
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
@@ -302,7 +311,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
               const SizedBox(height: 24),
 
               // Service Area Selection
-              Text(
+              const Text(
                 'Service Areas',
                 style: TextStyle(
                   fontSize: 18,
@@ -320,7 +329,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
               const SizedBox(height: 16),
 
               // District Selection
-              ...LocationService.getDistricts().map((district) => Padding(
+              ...districtsList.map((district) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Container(
                   padding: const EdgeInsets.all(16),
@@ -350,7 +359,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
                                 } else {
                                   _selectedDistricts.remove(district['id']);
                                   // Remove all wards from this district
-                                  final districtWards = LocationService.getWardsByDistrict(district['id']);
+                                  final districtWards = getWardsForDistrict(district['id']);
                                   for (var ward in districtWards) {
                                     _selectedWards.remove(ward['id']);
                                   }
@@ -387,7 +396,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
                           ),
                         ),
                         const SizedBox(height: 8),
-                        ...LocationService.getWardsByDistrict(district['id']).map((ward) => Padding(
+                        ...getWardsForDistrict(district['id']).map((ward) => Padding(
                           padding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
                           child: Row(
                             children: [
@@ -428,7 +437,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
               // Max Liters Slider
               Text(
                 'Maximum Liters Per Trip: $_maxLitersPerTrip L',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -484,7 +493,7 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
 
     if (_selectedDistricts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Please select at least one service area'),
           backgroundColor: Colors.red,
         ),
@@ -502,26 +511,34 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
 
       if (_completionPercentage == 100) {
         // Navigate to vendor dashboard
-        Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
+        }
       } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Progress saved. Complete your profile to start receiving orders.'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Progress saved. Complete your profile to start receiving orders.'),
-            backgroundColor: Colors.blue,
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

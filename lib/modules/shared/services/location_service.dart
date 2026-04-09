@@ -182,10 +182,10 @@ class _LocationSelectorState extends State<LocationSelector> {
       children: [
         // District Dropdown
         DropdownButtonFormField<int>(
-          value: _selectedDistrictId,
+          initialValue: _selectedDistrictId,
           decoration: InputDecoration(
             labelText: 'District',
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
             enabled: widget.enabled,
           ),
           items: LocationService.getDistricts().map((district) {
@@ -199,12 +199,12 @@ class _LocationSelectorState extends State<LocationSelector> {
               _selectedDistrictId = districtId;
               _selectedWardId = null;
               _wards = districtId != null 
-                  ? LocationService.getWardsByDistrict(districtId!)
+                  ? LocationService.getWardsByDistrict(districtId)
                   : [];
             });
             
             if (districtId != null && _selectedWardId != null) {
-              widget.onLocationChanged(districtId!, _selectedWardId!);
+              widget.onLocationChanged(districtId, _selectedWardId!);
             }
           } : null,
         ),
@@ -213,10 +213,10 @@ class _LocationSelectorState extends State<LocationSelector> {
         
         // Ward Dropdown
         DropdownButtonFormField<int>(
-          value: _selectedWardId,
+          initialValue: _selectedWardId,
           decoration: InputDecoration(
             labelText: 'Ward',
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
             enabled: widget.enabled && _wards.isNotEmpty,
           ),
           items: _wards.map((ward) {

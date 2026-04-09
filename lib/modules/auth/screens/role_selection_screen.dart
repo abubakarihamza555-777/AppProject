@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../config/routes/app_routes.dart';
-import '../../../shared/widgets/custom_button.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -92,7 +91,7 @@ class RoleSelectionScreen extends StatelessWidget {
                                     color: Colors.black87,
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 const Text(
                                   'Nataka kununua maji',
                                   style: TextStyle(
@@ -144,7 +143,7 @@ class RoleSelectionScreen extends StatelessWidget {
                                     color: Colors.black87,
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 const Text(
                                   'Nauza na kusafirisha maji',
                                   style: TextStyle(

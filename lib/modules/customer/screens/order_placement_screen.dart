@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../config/routes/app_routes.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
-import '../../../localization/language_provider.dart';
-import '../controllers/home_controller.dart';
 
 class OrderPlacementScreen extends StatefulWidget {
   const OrderPlacementScreen({super.key});
@@ -380,7 +376,7 @@ class _OrderPlacementScreenState extends State<OrderPlacementScreen> {
           onChanged: (value) {
             setState(() {
               _isAsapDelivery = value!;
-              if (!value!) {
+              if (!value) {
                 _showDateTimePicker();
               }
             });
@@ -540,7 +536,7 @@ class _OrderPlacementScreenState extends State<OrderPlacementScreen> {
             width: 120,
             child: Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w500,
                 color: Colors.grey,
               ),
@@ -676,22 +672,22 @@ class _OrderPlacementScreenState extends State<OrderPlacementScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.green),
-            const SizedBox(width: 8),
-            const Text('ORDER IMEWEKWA!'),
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('ORDER IMEWEKWA!'),
           ],
         ),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Order #: WTR-20260315-001'),
-            const SizedBox(height: 8),
-            const Text('Status: Inatafuta vendor...'),
-            const SizedBox(height: 8),
-            const Text('Utapata taarifa wakati vendor atakapokubali order.'),
+            Text('Order #: WTR-20260315-001'),
+            SizedBox(height: 8),
+            Text('Status: Inatafuta vendor...'),
+            SizedBox(height: 8),
+            Text('Utapata taarifa wakati vendor atakapokubali order.'),
           ],
         ),
         actions: [

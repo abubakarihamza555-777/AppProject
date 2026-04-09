@@ -59,7 +59,7 @@ class EarningsChart extends StatelessWidget {
               isCurved: true,
               color: color,
               barWidth: 3,
-              belowBarData: BarAreaData(show: true, color: color.withOpacity(0.15)),
+              belowBarData: BarAreaData(show: true, color: color.withValues(alpha: 0.15)),
               dotData: const FlDotData(show: false),
               spots: [
                 for (var i = 0; i < entries.length; i++)

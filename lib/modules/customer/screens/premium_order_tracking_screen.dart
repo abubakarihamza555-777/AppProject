@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
-import '../../../shared/widgets/loading_indicator.dart';
-import '../../../localization/language_provider.dart';
 import '../../../core/utils/helpers.dart';
-import '../controllers/order_controller.dart';
-import '../widgets/order_status_timeline.dart';
 
 class PremiumOrderTrackingScreen extends StatefulWidget {
   const PremiumOrderTrackingScreen({super.key});
@@ -24,7 +18,7 @@ class _PremiumOrderTrackingScreenState extends State<PremiumOrderTrackingScreen>
   late Animation<Offset> _slideAnimation;
   
   // Mock order data for demonstration
-  Map<String, dynamic> _mockOrder = {
+  final Map<String, dynamic> _mockOrder = {
     'id': 'WTR-20260315-001',
     'orderDate': DateTime.now(),
     'totalPrice': 15000,
@@ -137,7 +131,7 @@ class _PremiumOrderTrackingScreenState extends State<PremiumOrderTrackingScreen>
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.receipt_long, color: Colors.white, size: 24),
+                    const Icon(Icons.receipt_long, color: Colors.white, size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -301,10 +295,10 @@ class _PremiumOrderTrackingScreenState extends State<PremiumOrderTrackingScreen>
                       bottom: 40,
                       child: Container(
                         padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: Colors.green,
                           borderRadius: BorderRadius.all(Radius.circular(20)),
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
                               color: Colors.black26,
                               blurRadius: 5,
@@ -312,7 +306,7 @@ class _PremiumOrderTrackingScreenState extends State<PremiumOrderTrackingScreen>
                             ),
                           ],
                         ),
-                        child: Icon(Icons.home, color: Colors.white, size: 20),
+                        child: const Icon(Icons.home, color: Colors.white, size: 20),
                       ),
                     ),
                     

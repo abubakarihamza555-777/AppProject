@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/bottom_nav_bar.dart';
 import '../../../localization/language_provider.dart';
 import '../../../core/theme/theme_provider.dart';
-import '../../../core/utils/helpers.dart';
 import '../controllers/vendor_dashboard_controller.dart';
-import '../widgets/vendor_stats_card.dart';
 
 class PremiumVendorDashboard extends StatefulWidget {
   const PremiumVendorDashboard({super.key});
@@ -23,7 +20,6 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late AnimationController _fadeController;
-  late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
 
   @override
@@ -37,14 +33,6 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
-    _slideAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
     
     _fadeAnimation = Tween<double>(
       begin: 0.0,
@@ -441,7 +429,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
               height: 200,
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(show: false),
+                  gridData: const FlGridData(show: false),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
@@ -475,8 +463,8 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                         },
                       ),
                     ),
-                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
@@ -496,7 +484,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                       ),
                       barWidth: 3,
                       isStrokeCapRound: true,
-                      dotData: FlDotData(show: false),
+                      dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
                         gradient: LinearGradient(

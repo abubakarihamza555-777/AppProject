@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/extensions/string_extensions.dart';
 
 class VendorCard extends StatelessWidget {
   final Map<String, dynamic> vendor;
@@ -17,7 +16,6 @@ class VendorCard extends StatelessWidget {
     final rating = (vendor['rating'] ?? 0.0).toDouble();
     final totalDeliveries = vendor['total_deliveries'] ?? 0;
     final profileImage = vendor['users']?['profile_image'];
-    final fullName = vendor['users']?['full_name'] ?? 'Unknown';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -35,7 +33,7 @@ class VendorCard extends StatelessWidget {
                   // Vendor Logo
                   CircleAvatar(
                     radius: 30,
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     backgroundImage: profileImage != null
                         ? NetworkImage(profileImage!)
                         : null,

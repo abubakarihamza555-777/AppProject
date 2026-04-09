@@ -69,7 +69,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             
             // Mobile Money Option
             Card(
-              child: RadioListTile<String>(
+              child: ListTile(
                 title: Row(
                   children: [
                     const Icon(Icons.phone_android, color: Colors.green),
@@ -78,11 +78,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ],
                 ),
                 subtitle: const Text('M-Pesa, Tigo Pesa, Airtel Money'),
-                value: 'mobile_money',
-                groupValue: _selectedMethod,
-                onChanged: (value) {
+                trailing: Radio<String>(
+                  value: 'mobile_money',
+                  groupValue: _selectedMethod,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedMethod = value!;
+                    });
+                  },
+                  fillColor: WidgetStateProperty.all(Colors.green),
+                ),
+                onTap: () {
                   setState(() {
-                    _selectedMethod = value!;
+                    _selectedMethod = 'mobile_money';
                   });
                 },
               ),
@@ -90,7 +98,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             
             // Cash Option
             Card(
-              child: RadioListTile<String>(
+              child: ListTile(
                 title: Row(
                   children: [
                     const Icon(Icons.money, color: Colors.orange),
@@ -99,11 +107,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ],
                 ),
                 subtitle: const Text('Pay on delivery'),
-                value: 'cash',
-                groupValue: _selectedMethod,
-                onChanged: (value) {
+                trailing: Radio<String>(
+                  value: 'cash',
+                  groupValue: _selectedMethod,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedMethod = value!;
+                    });
+                  },
+                  fillColor: WidgetStateProperty.all(Colors.orange),
+                ),
+                onTap: () {
                   setState(() {
-                    _selectedMethod = value!;
+                    _selectedMethod = 'cash';
                   });
                 },
               ),

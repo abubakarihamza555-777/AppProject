@@ -92,7 +92,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(order.status).withOpacity(0.1),
+                                      color: _getStatusColor(order.status).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(

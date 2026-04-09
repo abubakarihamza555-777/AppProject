@@ -47,17 +47,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Update profile logic here
       await Future.delayed(const Duration(seconds: 1));
       
-      setState(() {
-        _isLoading = false;
-        _isEditing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isEditing = false;
+        });
+      }
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     }
   }
 
@@ -80,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       final authController = context.read<AuthController>();
       await authController.signOut();
       if (mounted) {

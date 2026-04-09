@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../localization/language_provider.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -89,7 +88,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
                 color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(60),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.check_circle,
                 color: Colors.green,
                 size: 60,
@@ -263,7 +262,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen>
                       ),
                       borderRadius: BorderRadius.circular(100),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.water_drop,
                       color: Colors.white,
                       size: 80,

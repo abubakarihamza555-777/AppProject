@@ -211,29 +211,45 @@ class _RequestWaterScreenState extends State<RequestWaterScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: RadioListTile<String>(
+                            child: ListTile(
                               title: Text(languageProvider.translate('cash')),
-                              value: 'cash',
-                              groupValue: _selectedPaymentMethod,
-                              onChanged: (value) {
+                              trailing: Radio<String>(
+                                value: 'cash',
+                                groupValue: _selectedPaymentMethod,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedPaymentMethod = value!;
+                                  });
+                                },
+                                fillColor: WidgetStateProperty.all(Colors.blue),
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                              onTap: () {
                                 setState(() {
-                                  _selectedPaymentMethod = value!;
+                                  _selectedPaymentMethod = 'cash';
                                 });
                               },
-                              contentPadding: EdgeInsets.zero,
                             ),
                           ),
                           Expanded(
-                            child: RadioListTile<String>(
+                            child: ListTile(
                               title: Text(languageProvider.translate('mobile_money')),
-                              value: 'mobile_money',
-                              groupValue: _selectedPaymentMethod,
-                              onChanged: (value) {
+                              trailing: Radio<String>(
+                                value: 'mobile_money',
+                                groupValue: _selectedPaymentMethod,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedPaymentMethod = value!;
+                                  });
+                                },
+                                fillColor: WidgetStateProperty.all(Colors.green),
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                              onTap: () {
                                 setState(() {
-                                  _selectedPaymentMethod = value!;
+                                  _selectedPaymentMethod = 'mobile_money';
                                 });
                               },
-                              contentPadding: EdgeInsets.zero,
                             ),
                           ),
                         ],

@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_indicator.dart';
-import '../../../shared/services/location_service.dart';
-import '../../../localization/language_provider.dart';
-import '../controllers/customer_profile_controller.dart';
+import '../../../modules/shared/services/location_service.dart';
 
 class CustomerProfileCompletionScreen extends StatefulWidget {
   const CustomerProfileCompletionScreen({super.key});
@@ -50,15 +47,24 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
 
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Provider.of<LanguageProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Complete Your Profile'),
-        subtitle: Text('$_completionPercentage% Complete'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Complete Your Profile'),
+            Text('$_completionPercentage% Complete',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                )),
+          ],
+        ),
         actions: [
           if (_completionPercentage == 100)
-            Icon(Icons.verified, color: Colors.green),
+            const Icon(Icons.verified, color: Colors.green),
         ],
       ),
       body: SingleChildScrollView(
@@ -82,7 +88,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
                     Row(
                       children: [
                         Icon(Icons.info_outline, color: Colors.blue.shade700),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           'Profile Completion',
                           style: TextStyle(
@@ -92,7 +98,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     LinearProgressIndicator(
                       value: _completionPercentage / 100,
                       backgroundColor: Colors.grey.shade300,
@@ -100,7 +106,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
                         _completionPercentage == 100 ? Colors.green : Colors.blue,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Complete your profile for faster water delivery',
                       style: TextStyle(
@@ -114,7 +120,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
               const SizedBox(height: 24),
 
               // Location Information
-              Text(
+              const Text(
                 'Delivery Location',
                 style: TextStyle(
                   fontSize: 18,
@@ -173,7 +179,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
               const SizedBox(height: 24),
 
               // Delivery Preferences
-              Text(
+              const Text(
                 'Delivery Preferences',
                 style: TextStyle(
                   fontSize: 18,
@@ -192,7 +198,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Truck Accessibility',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
@@ -370,12 +376,14 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
     if (!_formKey.currentState!.validate()) return;
 
     if (_districtId == 0 || _wardId == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please select your district and ward'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select your district and ward'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       return;
     }
 
@@ -389,26 +397,34 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
 
       if (_completionPercentage == 100) {
         // Navigate to home screen
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
+        }
       } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Progress saved. Complete your profile for better service.'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Progress saved. Complete your profile for better service.'),
-            backgroundColor: Colors.blue,
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
