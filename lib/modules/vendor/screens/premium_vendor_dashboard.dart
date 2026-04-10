@@ -4,9 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/bottom_nav_bar.dart';
+import '../../../shared/widgets/notification_icon.dart';
 import '../../../localization/language_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../controllers/vendor_dashboard_controller.dart';
+import '../../../shared/widgets/notification_screen.dart';
 
 class PremiumVendorDashboard extends StatefulWidget {
   const PremiumVendorDashboard({super.key});
@@ -57,7 +59,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
 
   Future<void> _loadData() async {
     final controller = context.read<VendorDashboardController>();
-    await controller.loadDashboardData('temp_vendor_id');
+    await controller.loadDashboardData();
   }
 
   Widget _buildPremiumHeader(
@@ -160,33 +162,16 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                       ),
                       const SizedBox(width: 8),
                       // Notifications
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Stack(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                // Navigate to notifications
-                              },
-                              icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                      NotificationIcon(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationScreen(),
                             ),
-                            Positioned(
-                              right: 8,
-                              top: 8,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          );
+                        },
+                        color: Colors.white,
                       ),
                     ],
                   ),
@@ -207,9 +192,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                     Expanded(
                       child: _buildStatCard(
                         Icons.pending_actions,
-                        '5',
+                        controller.incomingOrdersCount.toString(),
                         languageProvider.currentLocale.languageCode == 'sw' 
-                          ? 'Oda Zinasubiri' 
+                          ? 'Oda Zilizosubiri' 
                           : 'Pending Orders',
                         Colors.white,
                       ),
@@ -218,9 +203,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                     Expanded(
                       child: _buildStatCard(
                         Icons.local_shipping,
-                        '3',
+                        controller.activeDeliveriesCount.toString(),
                         languageProvider.currentLocale.languageCode == 'sw' 
-                          ? 'Uwasilishaji Kazi' 
+                          ? 'Usafirishaji Unaoendelea' 
                           : 'Active Deliveries',
                         Colors.white,
                       ),
@@ -229,10 +214,10 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                     Expanded(
                       child: _buildStatCard(
                         Icons.attach_money,
-                        'TSh 45,000',
+                        'TSh ${controller.todayEarnings.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
                         languageProvider.currentLocale.languageCode == 'sw' 
                           ? 'Mapato Leo' 
-                          : "Today's Earnings",
+                          : 'Today Earnings',
                         Colors.white,
                       ),
                     ),

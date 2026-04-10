@@ -7,184 +7,225 @@ class RoleSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(
-                    constraints.maxWidth < 360 ? 16.0 : 24.0,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(height: constraints.maxHeight * 0.05),
-                      
-                      // App Logo/Icon
-                      Icon(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.blue.shade50,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 60),
+              
+              // Animated title
+              TweenAnimationBuilder(
+                tween: Tween<double>(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 800),
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 50 * (1 - value)),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue.shade600, Colors.blue.shade800],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
                         Icons.water_drop,
-                        size: constraints.maxWidth < 360 ? 40 : 50,
-                        color: Theme.of(context).primaryColor,
+                        color: Colors.white,
+                        size: 40,
                       ),
-                      SizedBox(height: constraints.maxHeight * 0.02),
-                      
-                      // Welcome Title
-                      Text(
-                        'WELCOME TO DAR WATER APP',
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Welcome to Dar Water',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Choose how you want to use the app',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const Spacer(),
+              
+              // Role cards
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    _RoleCard(
+                      title: 'Customer',
+                      subtitle: 'Order water for delivery',
+                      icon: Icons.person_outline,
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.shade400, Colors.blue.shade600],
+                      ),
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.customerRegistration,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    _RoleCard(
+                      title: 'Vendor',
+                      subtitle: 'Sell and deliver water',
+                      icon: Icons.local_shipping_outlined,
+                      gradient: LinearGradient(
+                        colors: [Colors.green.shade400, Colors.green.shade600],
+                      ),
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.vendorRegistration,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              
+              const Spacer(),
+              
+              // Login link
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.login);
+                      },
+                      child: Text(
+                        'Sign In',
                         style: TextStyle(
-                          fontSize: constraints.maxWidth < 360 ? 18 : 20,
+                          color: Colors.blue.shade700,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: constraints.maxHeight * 0.01),
-                      
-                      const Text(
-                        'Chagua aina ya akaunti unayotaka',
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Gradient gradient;
+  final VoidCallback onTap;
+
+  const _RoleCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 600),
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: 0.9 + (value * 0.1),
+          child: Opacity(opacity: value, child: child),
+        );
+      },
+      child: Material(
+        elevation: 8,
+        shadowColor: gradient.colors.first.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 32),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: constraints.maxHeight * 0.04),
-                      
-                      // Customer Option
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue.shade300),
-                          color: Colors.blue.shade50,
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.register,
-                              arguments: {'role': 'customer'},
-                            );
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.all(
-                              constraints.maxWidth < 360 ? 12.0 : 16.0,
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.person,
-                                  size: constraints.maxWidth < 360 ? 30 : 35,
-                                  color: Colors.blue.shade700,
-                                ),
-                                SizedBox(height: constraints.maxHeight * 0.01),
-                                Text(
-                                  'I AM A CUSTOMER',
-                                  style: TextStyle(
-                                    fontSize: constraints.maxWidth < 360 ? 14 : 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                const Text(
-                                  'Nataka kununua maji',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
-                      
-                      SizedBox(height: constraints.maxHeight * 0.02),
-                      
-                      // Vendor Option
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.green.shade300),
-                          color: Colors.green.shade50,
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.register,
-                              arguments: {'role': 'vendor'},
-                            );
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.all(
-                              constraints.maxWidth < 360 ? 12.0 : 16.0,
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.local_shipping,
-                                  size: constraints.maxWidth < 360 ? 30 : 35,
-                                  color: Colors.green.shade700,
-                                ),
-                                SizedBox(height: constraints.maxHeight * 0.01),
-                                Text(
-                                  'I AM A VENDOR',
-                                  style: TextStyle(
-                                    fontSize: constraints.maxWidth < 360 ? 14 : 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                const Text(
-                                  'Nauza na kusafirisha maji',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      
-                      SizedBox(height: constraints.maxHeight * 0.03),
-                      
-                      // Already have account
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Tayari una akaunti?',
-                            style: TextStyle(color: Colors.grey, fontSize: 10),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, AppRoutes.login);
-                            },
-                            child: const Text(
-                              'INGIA',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: constraints.maxHeight * 0.02),
                     ],
                   ),
                 ),
-              ),
-            );
-          },
+                const Icon(Icons.arrow_forward, color: Colors.white),
+              ],
+            ),
+          ),
         ),
       ),
     );

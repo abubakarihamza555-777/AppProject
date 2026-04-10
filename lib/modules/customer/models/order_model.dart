@@ -75,10 +75,11 @@ class OrderModel {
   
   String getStatusText(String languageCode) {
     final statusMap = {
-      'pending': languageCode == 'sw' ? 'Inasubiri' : 'Pending',
-      'confirmed': languageCode == 'sw' ? 'Imethibitishwa' : 'Confirmed',
+      'placed': languageCode == 'sw' ? 'Imewekwa' : 'Placed',
+      'vendor_assigned': languageCode == 'sw' ? 'Mtoa huduma amechaguliwa' : 'Vendor assigned',
+      'accepted': languageCode == 'sw' ? 'Imekubaliwa' : 'Accepted',
       'preparing': languageCode == 'sw' ? 'Inaandaliwa' : 'Preparing',
-      'out_for_delivery': languageCode == 'sw' ? 'Inasafirishwa' : 'Out for delivery',
+      'out_for_delivery': languageCode == 'sw' ? 'Imetoka' : 'Out for delivery',
       'delivered': languageCode == 'sw' ? 'Imewasilishwa' : 'Delivered',
       'cancelled': languageCode == 'sw' ? 'Imefutwa' : 'Cancelled',
       'completed': languageCode == 'sw' ? 'Imekamilika' : 'Completed',

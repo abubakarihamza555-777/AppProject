@@ -65,15 +65,35 @@ class EarningsService {
   // Get earnings by period
   Future<Map<String, double>> getEarningsByPeriod(String vendorId, String period) async {
     try {
-      final response = await _supabase.rpc('get_earnings_by_period', params: {
-        'vendor_id': vendorId,
-        'period': period, // 'daily', 'weekly', 'monthly', 'yearly'
-      });
+      final earnings = await getVendorEarnings(vendorId);
+      final Map<String, double> result = {};
       
-      return Map<String, double>.from(response);
+      for (var earning in earnings) {
+        final key = _getPeriodKey(earning.createdAt, period);
+        result[key] = (result[key] ?? 0) + earning.amount;
+      }
+      return result;
     } catch (e) {
       print('Get earnings by period error: $e');
       return {};
+    }
+  }
+
+  // Helper method to get period key based on period type
+  String _getPeriodKey(DateTime date, String period) {
+    switch (period) {
+      case 'daily':
+        return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      case 'weekly':
+        // Get start of week (Monday)
+        final startOfWeek = date.subtract(Duration(days: date.weekday - 1));
+        return '${startOfWeek.year}-W${startOfWeek.week.toString().padLeft(2, '0')}';
+      case 'monthly':
+        return '${date.year}-${date.month.toString().padLeft(2, '0')}';
+      case 'yearly':
+        return '${date.year}';
+      default:
+        return '${date.year}-${date.month.toString().padLeft(2, '0')}';
     }
   }
   

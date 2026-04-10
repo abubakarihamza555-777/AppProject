@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/vendor_service.dart';
 import '../services/earnings_service.dart';
 import '../../customer/models/order_model.dart';
+import '../../auth/controllers/auth_controller.dart';
+import '../../../config/supabase/supabase_client.dart';
 
 class VendorDashboardController extends ChangeNotifier {
   final VendorService _vendorService = VendorService();
@@ -22,11 +24,29 @@ class VendorDashboardController extends ChangeNotifier {
   double get totalEarnings => _totalEarnings;
   double get pendingEarnings => _pendingEarnings;
   List<OrderModel> get recentOrders => _recentOrders;
+
+  // Get real vendor ID from AuthController
+  Future<String> _getCurrentVendorId() async {
+    final authController = AuthController();
+    final userId = authController.currentUser?.id;
+    
+    if (userId == null) {
+      throw Exception('No authenticated user found');
+    }
+    
+    final vendor = await _vendorService.getVendorByUserId(userId!);
+    if (vendor == null) {
+      throw Exception('No vendor profile found for user');
+    }
+    
+    return vendor.id;
+  }
   
-  Future<void> loadDashboardData(String vendorId) async {
+  Future<void> loadDashboardData() async {
     _setLoading(true);
     
     try {
+      final vendorId = await _getCurrentVendorId();
       final incomingOrders = await _vendorService.getIncomingOrders(vendorId);
       final activeDeliveries = await _vendorService.getActiveDeliveries(vendorId);
       final allOrders = await _vendorService.getVendorOrders(vendorId);

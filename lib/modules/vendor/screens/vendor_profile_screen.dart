@@ -28,7 +28,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
   Future<void> _loadProfile() async {
     final controller = context.read<VendorProfileController>();
-    await controller.loadVendorProfile('temp_vendor_id');
+    await controller.loadVendorProfile(); // Use real vendor ID from controller
     _updateControllers();
   }
 
@@ -38,6 +38,20 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       _businessNameController.text = profile.businessName;
       _businessPhoneController.text = profile.businessPhone;
       _businessAddressController.text = profile.businessAddress;
+    }
+  }
+
+  // Helper method to get vehicle type name
+  String _getVehicleTypeName(String? vehicleType) {
+    switch (vehicleType) {
+      case 'towable':
+        return 'Towable Browser';
+      case 'medium_truck':
+        return 'Medium Truck';
+      case 'heavy_truck':
+        return 'Heavy Truck';
+      default:
+        return 'Unknown';
     }
   }
 
@@ -167,6 +181,67 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                             ),
                             filled: true,
                             fillColor: Colors.grey.shade50,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Vehicle Type (Read-only)
+                        TextFormField(
+                          initialValue: _getVehicleTypeName(controller.vendorProfile?.vehicleType),
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Vehicle Type',
+                            prefixIcon: const Icon(Icons.directions_car),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Max Liters Per Trip (Read-only)
+                        TextFormField(
+                          initialValue: '${controller.vendorProfile?.maxLitersPerTrip ?? 0} L',
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Max Liters Per Trip',
+                            prefixIcon: const Icon(Icons.water_drop),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Verification Status
+                        Card(
+                          color: controller.vendorProfile?.isVerified == true 
+                              ? Colors.green.shade50 
+                              : Colors.orange.shade50,
+                          child: ListTile(
+                            leading: Icon(
+                              controller.vendorProfile?.isVerified == true 
+                                  ? Icons.verified 
+                                  : Icons.pending,
+                              color: controller.vendorProfile?.isVerified == true 
+                                  ? Colors.green 
+                                  : Colors.orange,
+                            ),
+                            title: Text(
+                              controller.vendorProfile?.isVerified == true 
+                                  ? 'Verified Vendor' 
+                                  : 'Pending Verification',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              controller.vendorProfile?.isVerified == true 
+                                  ? 'Your business is verified' 
+                                  : 'Your profile is under review',
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),

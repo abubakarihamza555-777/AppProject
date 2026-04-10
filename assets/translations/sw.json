@@ -126,5 +126,16 @@
   "account_created": "Akaunti Yako Imeundwa",
   "ready_to_order": "Ume tayari kuweka oda ya maji",
   "role": "Jukumu",
-  "skip_for_now": "Ruka kwa sasa"
+  "skip_for_now": "Ruka kwa sasa",
+  "welcome_to_dar_water_app": "Karibu Dar Water App",
+  "login_with_email_or_phone": "Ingia kwa kutumia email au namba ya simu uliyosajili",
+  "email_or_phone": "Barua Pepe au Namba ya Simu",
+  "please_enter_email_or_phone": "Tafadhali weka barua pepe au namba ya simu",
+  "please_enter_password": "Tafadhali weka neno siri",
+  "forgot_password": "Umesahau neno siri?",
+  "dont_have_account": "Huna akaunti?",
+  "customer_registration": "Usajili wa Mteja",
+  "vendor_registration": "Usajili wa Mtoa Huduma",
+  "registration_failed": "Usajili umeshindwa",
+  "no_orders": "Hakuna maagizo bado"
 } 

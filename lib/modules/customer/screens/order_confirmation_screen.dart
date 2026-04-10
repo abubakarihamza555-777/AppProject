@@ -88,6 +88,16 @@ class OrderConfirmationScreen extends StatelessWidget {
                     ),
                     const Divider(),
                     _DetailRow(
+                      label: languageProvider.translate('vendor'),
+                      value: order.vendorDetails?['business_name'] ?? 'Pending assignment',
+                    ),
+                    const Divider(),
+                    _DetailRow(
+                      label: languageProvider.translate('status'),
+                      value: order.getStatusText(languageProvider.currentLocale.languageCode),
+                    ),
+                    const Divider(),
+                    _DetailRow(
                       label: languageProvider.translate('payment_method'),
                       value: order.paymentMethod,
                     ),

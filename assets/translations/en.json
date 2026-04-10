@@ -126,5 +126,16 @@
   "account_created": "Your Account Has Been Created",
   "ready_to_order": "You are ready to order water",
   "role": "Role",
-  "skip_for_now": "Skip for now"
+  "skip_for_now": "Skip for now",
+  "welcome_to_dar_water_app": "Welcome to Dar Water App",
+  "login_with_email_or_phone": "Login with email or phone number you registered",
+  "email_or_phone": "Email or Phone",
+  "please_enter_email_or_phone": "Please enter email or phone number",
+  "please_enter_password": "Please enter password",
+  "forgot_password": "Forgot password?",
+  "dont_have_account": "Don't have account?",
+  "customer_registration": "Customer Registration",
+  "vendor_registration": "Vendor Registration",
+  "registration_failed": "Registration failed",
+  "no_orders": "No orders yet"
 } 

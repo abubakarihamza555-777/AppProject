@@ -9,6 +9,10 @@ import 'localization/languages.dart';
 import 'core/theme/theme_provider.dart';
 import 'modules/auth/controllers/auth_controller.dart';
 import 'modules/customer/controllers/home_controller.dart';
+import 'modules/customer/controllers/order_controller.dart';
+import 'modules/vendor/controllers/vendor_dashboard_controller.dart';
+import 'core/notifications/notification_service.dart';
+import 'core/services/profile_completion_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +37,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => HomeController()),
+        ChangeNotifierProvider(create: (_) => OrderController()),
+        ChangeNotifierProvider(create: (_) => VendorDashboardController()),
+        ChangeNotifierProvider(create: (_) => NotificationService()),
+        ChangeNotifierProvider(create: (_) => ProfileCompletionService()),
       ],
       child: Consumer2<LanguageProvider, ThemeProvider>(
         builder: (context, languageProvider, themeProvider, child) {

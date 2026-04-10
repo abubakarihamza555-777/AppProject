@@ -203,4 +203,123 @@ class AuthService {
         .update(data)
         .eq('id', userId);
   }
+  
+  // Add token management
+  Future<String?> getAccessToken() async {
+    return _supabase.auth.currentSession?.accessToken;
+  }
+  
+  Future<bool> refreshSession() async {
+    try {
+      await _supabase.auth.refreshSession();
+      return true;
+    } catch (e) {
+      print('Session refresh error: $e');
+      return false;
+    }
+  }
+  
+  // Add session timeout
+  Future<void> startSessionTimer() async {
+    await Future.delayed(const Duration(hours: 24));
+    await signOut();
+  }
+  
+  // Add guest mode
+  Future<UserModel?> signInAsGuest() async {
+    // Create anonymous user
+    final response = await _supabase.auth.signInAnonymously();
+    if (response.user != null) {
+      return UserModel(
+        id: response.user!.id,
+        email: 'guest@temp.com',
+        fullName: 'Guest User',
+        phone: '',
+        role: 'customer',
+        createdAt: DateTime.now(),
+      );
+    }
+    return null;
+  }
+  
+  // Add password reset confirmation
+  Future<void> confirmPasswordReset(String email, String token, String newPassword) async {
+    await _supabase.auth.recoverSession(token);
+    await _supabase.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
+  }
+  
+  // Add social sign in methods
+  Future<UserModel?> signInWithGoogle() async {
+    try {
+      final response = await _supabase.auth.signInWithOAuth(
+        Provider.google,
+        redirectTo: 'io.supabase.flutter://callback',
+      );
+      
+      if (response.user != null) {
+        return UserModel(
+          id: response.user!.id,
+          email: response.user!.email ?? '',
+          fullName: response.user!.userMetadata?['full_name'] ?? 'Google User',
+          phone: response.user!.phone ?? '',
+          role: response.user!.userMetadata?['role'] ?? 'customer',
+          createdAt: DateTime.now(),
+        );
+      }
+      return null;
+    } catch (e) {
+      print('Google sign in error: $e');
+      return null;
+    }
+  }
+  
+  Future<UserModel?> signInWithFacebook() async {
+    try {
+      final response = await _supabase.auth.signInWithOAuth(
+        Provider.facebook,
+        redirectTo: 'io.supabase.flutter://callback',
+      );
+      
+      if (response.user != null) {
+        return UserModel(
+          id: response.user!.id,
+          email: response.user!.email ?? '',
+          fullName: response.user!.userMetadata?['full_name'] ?? 'Facebook User',
+          phone: response.user!.phone ?? '',
+          role: response.user!.userMetadata?['role'] ?? 'customer',
+          createdAt: DateTime.now(),
+        );
+      }
+      return null;
+    } catch (e) {
+      print('Facebook sign in error: $e');
+      return null;
+    }
+  }
+  
+  Future<UserModel?> signInWithApple() async {
+    try {
+      final response = await _supabase.auth.signInWithOAuth(
+        Provider.apple,
+        redirectTo: 'io.supabase.flutter://callback',
+      );
+      
+      if (response.user != null) {
+        return UserModel(
+          id: response.user!.id,
+          email: response.user!.email ?? '',
+          fullName: response.user!.userMetadata?['full_name'] ?? 'Apple User',
+          phone: response.user!.phone ?? '',
+          role: response.user!.userMetadata?['role'] ?? 'customer',
+          createdAt: DateTime.now(),
+        );
+      }
+      return null;
+    } catch (e) {
+      print('Apple sign in error: $e');
+      return null;
+    }
+  }
 }

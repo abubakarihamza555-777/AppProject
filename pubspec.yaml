@@ -48,6 +48,10 @@ dependencies:
   url_launcher: ^6.2.1
   path_provider: ^2.1.1
   
+  # Authentication
+  local_auth: ^2.1.6
+  flutter_otp_text_field: ^1.1.1
+  
   # Charts
   fl_chart: ^0.66.0
   csv: ^8.0.0

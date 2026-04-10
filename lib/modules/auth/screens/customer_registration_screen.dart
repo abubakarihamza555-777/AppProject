@@ -23,6 +23,7 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
   
   bool _agreeToTerms = false;
   bool _isLoading = false;
+  int _currentStep = 1; // 1: Account, 2: Profile, 3: Complete
 
   @override
   void dispose() {
@@ -32,6 +33,41 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  // Add step indicator widget
+  Widget _buildRegistrationProgress() {
+    return Row(
+      children: [
+        _buildStep(1, 'Account', _currentStep >= 1),
+        Expanded(child: Container(height: 2, color: _currentStep >= 2 ? Colors.blue : Colors.grey.shade300)),
+        _buildStep(2, 'Profile', _currentStep >= 2),
+        Expanded(child: Container(height: 2, color: _currentStep >= 3 ? Colors.blue : Colors.grey.shade300)),
+        _buildStep(3, 'Complete', _currentStep >= 3),
+      ],
+    );
+  }
+  
+  Widget _buildStep(int step, String label, bool isActive) {
+    return Column(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isActive ? Colors.blue : Colors.grey.shade300,
+          ),
+          child: Center(
+            child: isActive
+                ? const Icon(Icons.check, color: Colors.white, size: 20)
+                : Text('$step', style: const TextStyle(color: Colors.white)),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: isActive ? Colors.blue : Colors.grey)),
+      ],
+    );
   }
 
   Future<void> _handleRegister() async {
@@ -64,6 +100,7 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
     });
 
     final authController = context.read<AuthController>();
+    final languageProvider = context.read<LanguageProvider>();
     final success = await authController.signUp(
       email: _emailController.text.trim(),
       password: _passwordController.text,
@@ -78,14 +115,24 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration successful! Please complete your profile.'),
+        SnackBar(
+          content: Text(languageProvider.translate('registration_successful')),
           backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
       );
       
       // Navigate to customer profile completion
       Navigator.pushReplacementNamed(context, AppRoutes.customerProfileCompletion);
+    } else if (mounted) {
+      final errorMsg = authController.errorMessage ?? languageProvider.translate('registration_failed');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMsg),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -106,6 +153,11 @@ class _CustomerRegistrationScreenState extends State<CustomerRegistrationScreen>
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 20),
+              
+              // Registration Progress Indicator
+              _buildRegistrationProgress(),
+              
+              const SizedBox(height: 30),
               
               // App Logo
               Center(

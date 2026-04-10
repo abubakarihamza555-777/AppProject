@@ -732,6 +732,8 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   '${order.quantity ?? 0} L - ${languageProvider.currentLocale.languageCode == 'sw' ? 'TSh' : 'TZS'} ${order.totalPrice ?? 0}',

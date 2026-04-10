@@ -35,6 +35,32 @@ class VendorProfileController extends ChangeNotifier {
   }
   
   // Load vendor profile
+  Future<void> loadVendorProfile() async {
+    _setLoading(true);
+    
+    try {
+      // Load by current user ID
+      final userId = supabase.auth.currentUser?.id;
+      if (userId != null) {
+        final response = await supabase
+            .from('vendors')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+        
+        if (response != null) {
+          _vendorProfile = VendorModel.fromJson(response);
+          _profileData = response;
+        }
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Load vendor profile
   Future<void> loadVendorProfile(String? vendorId) async {
     _setLoading(true);
     
@@ -48,6 +74,21 @@ class VendorProfileController extends ChangeNotifier {
           final response = await supabase
               .from('vendors')
               .select('*')
+              .eq('user_id', userId)
+              .maybeSingle();
+          
+          if (response != null) {
+            _vendorProfile = VendorModel.fromJson(response);
+            _profileData = response;
+          }
+        }
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _setLoading(false);
+    }
+  }
               .eq('user_id', userId)
               .maybeSingle();
           

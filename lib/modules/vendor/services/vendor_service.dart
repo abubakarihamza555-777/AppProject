@@ -291,16 +291,58 @@ class VendorService {
   // Toggle vendor availability
   Future<bool> toggleVendorAvailability(String vendorId) async {
     try {
-      final currentStatus = await getVendorAvailability(vendorId);
       await _supabase
-          .from(SupabaseTables.vendors)
-          .update({'is_active': !currentStatus})
+          .from('vendors')
+          .update({'is_active': !_supabase.rpc('get_vendor_status', params: {'vendor_id': vendorId})})
           .eq('id', vendorId);
-      
       return true;
     } catch (e) {
       print('Toggle vendor availability error: $e');
       return false;
+    }
+  }
+
+  // Request withdrawal
+  Future<bool> requestWithdrawal(String vendorId, double amount) async {
+    try {
+      await _supabase.from('withdrawals').insert({
+        'vendor_id': vendorId,
+        'amount': amount,
+        'status': 'pending',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      return true;
+    } catch (e) {
+      print('Request withdrawal error: $e');
+      return false;
+    }
+  }
+
+  // Get remaining capacity for vendor
+  Future<int> getRemainingCapacity(String vendorId) async {
+    try {
+      final vendor = await getVendorById(vendorId);
+      if (vendor == null) return 0;
+      
+      final today = DateTime.now();
+      final todayStr = today.toIso8601String().substring(0, 10);
+      
+      final response = await _supabase
+          .from('orders')
+          .select('quantity')
+          .eq('vendor_id', vendorId)
+          .eq('status', 'delivered')
+          .gte('created_at', todayStr);
+      
+      int totalDelivered = 0;
+      for (var order in response) {
+        totalDelivered += order['quantity'] as int;
+      }
+      
+      return (vendor.maxLitersPerTrip ?? 0) - totalDelivered;
+    } catch (e) {
+      print('Get remaining capacity error: $e');
+      return 0;
     }
   }
 }

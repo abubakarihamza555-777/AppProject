@@ -23,7 +23,7 @@ class _ActiveDeliveriesScreenState extends State<ActiveDeliveriesScreen> {
   
   Future<void> _loadOrders() async {
     final controller = context.read<VendorOrderController>();
-    await controller.loadOrders('temp_vendor_id'); // Replace with actual vendor ID
+    await controller.loadOrders(); // Use real vendor ID from controller
   }
 
   @override
@@ -173,6 +173,14 @@ class _ActiveDeliveryCard extends StatelessWidget {
                   ),
                 ),
               if (order.status == 'preparing')
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => onUpdateStatus('out_for_delivery'),
+                    child: Text(languageProvider.translate('start_delivery')),
+                  ),
+                ),
+              if (order.status == 'out_for_delivery')
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

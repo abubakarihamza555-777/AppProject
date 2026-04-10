@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../localization/language_provider.dart';
 import '../../../core/utils/helpers.dart';
+import '../../../config/supabase/supabase_client.dart';
 import '../controllers/order_controller.dart';
 import '../widgets/order_status_timeline.dart';
 
@@ -15,6 +16,7 @@ class OrderTrackingScreen extends StatefulWidget {
 
 class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   String? _orderId;
+  String? _estimatedDeliveryTime;
   
   @override
   void initState() {
@@ -28,6 +30,31 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   Future<void> _loadOrder() async {
     final controller = context.read<OrderController>();
     await controller.getOrderById(_orderId!);
+    
+    // Fetch real ETA from order_tracking table
+    if (_orderId != null) {
+      try {
+        final tracking = await SupabaseConfig.client
+            .from('order_tracking')
+            .select('estimated_minutes')
+            .eq('order_id', _orderId!)
+            .maybeSingle();
+        
+        if (tracking != null) {
+          final estimatedMinutes = tracking['estimated_minutes'] as int?;
+          if (estimatedMinutes != null) {
+            _estimatedDeliveryTime = '$estimatedMinutes-${estimatedMinutes + 15} minutes';
+          } else {
+            _estimatedDeliveryTime = 'Calculating...';
+          }
+        } else {
+          _estimatedDeliveryTime = 'Calculating...';
+        }
+      } catch (e) {
+        print('Error fetching tracking info: $e');
+        _estimatedDeliveryTime = 'Calculating...';
+      }
+    }
   }
 
   @override
@@ -132,7 +159,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              const Text('30-45 minutes'),
+                              Text(_estimatedDeliveryTime ?? 'Calculating...'),
                             ],
                           ),
                         ),

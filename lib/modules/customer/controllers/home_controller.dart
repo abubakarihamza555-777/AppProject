@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/order_model.dart';
+import '../../vendor/services/vendor_service.dart';
 
 class HomeController extends ChangeNotifier {
   String userName = 'Customer';
@@ -10,8 +11,11 @@ class HomeController extends ChangeNotifier {
   bool isLoadingVendors = false;
   int? customerDistrictId;
   int? customerWardId;
+  String? customerDistrictName;
   static const int pricePerLiter = 100; // 1L = 100 TZS
   static const double adminCommissionPercentage = 0.10; // 10% admin commission
+  
+  final VendorService _vendorService = VendorService();
 
   Future<void> loadDeliveryServices() async {
     deliveryServices = [
@@ -63,116 +67,59 @@ class HomeController extends ChangeNotifier {
     customerDistrictId = districtId;
     customerWardId = wardId;
     
-    if (districtId != null && wardId != null) {
-      isLoadingVendors = true;
-      notifyListeners();
+    // Set district name from districts list
+    if (districtId != null) {
+      final district = districts.firstWhere(
+        (d) => d['id'] == districtId,
+        orElse: () => {'name': 'Unknown'},
+      );
+      customerDistrictName = district['name'] as String?;
+    }
+    
+    isLoadingVendors = true;
+    notifyListeners();
+    
+    try {
+      // Fetch real vendors from database
+      final vendors = await _vendorService.getAllVendors();
       
-      try {
-        // For now, use mock data since we don't have the full service implemented
-        availableVendors = [
-          {
-            'id': '1',
-            'business_name': 'Quick Water Delivery',
+      // Convert vendor models to maps for UI compatibility and filter by active/verified
+      availableVendors = vendors
+          .where((vendor) => vendor.isActive && vendor.isVerified)
+          .map((vendor) => {
+            'id': vendor.id,
+            'business_name': vendor.businessName,
             'users': {
-              'full_name': 'John Doe',
-              'phone': '+255 712 345 678',
-              'profile_image': null,
+              'full_name': vendor.businessName, // Use business name as display name
+              'phone': vendor.businessPhone,
+              'profile_image': vendor.profileImage,
             },
-            'rating': 4.5,
-            'total_deliveries': 150,
-            'business_address': 'Ilala, Dar es Salaam',
-            'service_areas': [districtId],
-            'vehicle_type': 'medium_truck',
-            'min_capacity': 3000,
-            'max_capacity': 5000,
-          },
-          {
-            'id': '2', 
-            'business_name': 'Fast Water Services',
-            'users': {
-              'full_name': 'Jane Smith',
-              'phone': '+255 713 456 789',
-              'profile_image': null,
-            },
-            'rating': 4.8,
-            'total_deliveries': 200,
-            'business_address': 'Temeke, Dar es Salaam',
-            'service_areas': [districtId],
-            'vehicle_type': 'towable',
-            'min_capacity': 400,
-            'max_capacity': 2000,
-          },
-        ];
-      } catch (e) {
-        print('Error loading vendors: $e');
-        availableVendors = [];
-      } finally {
-        isLoadingVendors = false;
-        notifyListeners();
-      }
-    } else {
-      // Load all vendors if no location specified
-      isLoadingVendors = true;
-      notifyListeners();
+            'rating': vendor.rating,
+            'total_deliveries': vendor.totalDeliveries,
+            'business_address': vendor.businessAddress,
+            'service_areas': [], // TODO: Add service areas to vendor model
+            'vehicle_type': 'medium_truck', // Default vehicle type
+            'min_capacity': 3000, // Default capacity
+            'max_capacity': 5000, // Default capacity
+            'is_active': vendor.isActive,
+            'is_verified': vendor.isVerified,
+          }).toList();
       
-      try {
-        availableVendors = [
-          {
-            'id': '1',
-            'business_name': 'Quick Water Delivery',
-            'users': {
-              'full_name': 'John Doe',
-              'phone': '+255 712 345 678',
-              'profile_image': null,
-            },
-            'rating': 4.5,
-            'total_deliveries': 150,
-            'business_address': 'Ilala, Dar es Salaam',
-            'service_areas': [1, 2],
-            'vehicle_type': 'medium_truck',
-            'min_capacity': 3000,
-            'max_capacity': 5000,
-          },
-          {
-            'id': '2',
-            'business_name': 'Fast Water Services', 
-            'users': {
-              'full_name': 'Jane Smith',
-              'phone': '+255 713 456 789',
-              'profile_image': null,
-            },
-            'rating': 4.8,
-            'total_deliveries': 200,
-            'business_address': 'Temeke, Dar es Salaam',
-            'service_areas': [1, 2],
-            'vehicle_type': 'towable',
-            'min_capacity': 400,
-            'max_capacity': 2000,
-          },
-          {
-            'id': '3',
-            'business_name': 'Heavy Water Transport',
-            'users': {
-              'full_name': 'Mike Johnson',
-              'phone': '+255 714 567 890',
-              'profile_image': null,
-            },
-            'rating': 4.2,
-            'total_deliveries': 100,
-            'business_address': 'Ilala, Dar es Salaam',
-            'service_areas': [1, 2],
-            'vehicle_type': 'heavy_truck',
-            'min_capacity': 8000,
-            'max_capacity': 16000,
-          },
-        ];
-      } catch (e) {
-        print('Error loading vendors: $e');
-        availableVendors = [];
-      } finally {
-        isLoadingVendors = false;
-        notifyListeners();
+      // Filter by location if specified (currently all vendors since service_areas not implemented)
+      if (districtId != null) {
+        // For now, keep all vendors. In future, filter by service_areas
+        // availableVendors = availableVendors.where((vendor) {
+        //   final serviceAreas = vendor['service_areas'] as List<dynamic>? ?? [];
+        //   return serviceAreas.contains(districtId);
+        // }).toList();
       }
+      
+    } catch (e) {
+      print('Error loading vendors: $e');
+      availableVendors = [];
+    } finally {
+      isLoadingVendors = false;
+      notifyListeners();
     }
   }
 
@@ -213,7 +160,7 @@ class HomeController extends ChangeNotifier {
       )['name'];
       return '$wardName, $districtName';
     }
-    return 'Location not set';
+    return 'Dar es Salaam'; // Default to city instead of 'Location not set'
   }
   
   // Helper methods for location data

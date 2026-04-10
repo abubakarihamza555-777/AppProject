@@ -118,9 +118,24 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
     final homeController = Provider.of<HomeController>(context, listen: false);
     final vendors = homeController.availableVendors;
     
-    return vendors.where((vendor) {
-      return _isVendorCapacitySufficient(vendor, _selectedQuantity);
+    final filteredVendors = vendors.where((vendor) {
+      final minCap = vendor['min_capacity'] ?? 0;
+      final maxCap = vendor['max_capacity'] ?? 0;
+      return _selectedQuantity >= minCap && _selectedQuantity <= maxCap;
     }).toList();
+    
+    // Auto-select best vendor (highest rating among capacity-matching vendors)
+    if (filteredVendors.isNotEmpty && _selectedVendor == null) {
+      final bestVendor = filteredVendors.reduce((a, b) {
+        final ratingA = a['rating'] as double? ?? 0.0;
+        final ratingB = b['rating'] as double? ?? 0.0;
+        return ratingA > ratingB ? a : b;
+      });
+      _selectedVendor = bestVendor;
+      _selectedVendorId = bestVendor['id'] as String;
+    }
+    
+    return filteredVendors;
   }
 
   Widget _buildModernHeader() {

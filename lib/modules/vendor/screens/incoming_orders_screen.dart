@@ -23,7 +23,7 @@ class _IncomingOrdersScreenState extends State<IncomingOrdersScreen> {
   
   Future<void> _loadOrders() async {
     final controller = context.read<VendorOrderController>();
-    await controller.loadOrders('temp_vendor_id'); // Replace with actual vendor ID
+    await controller.loadOrders(); // Use real vendor ID from controller
   }
 
   @override

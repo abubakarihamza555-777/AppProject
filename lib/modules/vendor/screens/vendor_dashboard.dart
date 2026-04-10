@@ -25,7 +25,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
   
   Future<void> _loadData() async {
     final controller = context.read<VendorDashboardController>();
-    await controller.loadDashboardData('temp_vendor_id'); // Replace with actual vendor ID
+    await controller.loadDashboardData();
   }
 
   @override

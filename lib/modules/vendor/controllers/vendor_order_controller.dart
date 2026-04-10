@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/vendor_service.dart';
 import '../../customer/models/order_model.dart';
+import '../../auth/controllers/auth_controller.dart';
+import '../../../config/supabase/supabase_client.dart';
 
 class VendorOrderController extends ChangeNotifier {
   final VendorService _vendorService = VendorService();
@@ -10,13 +12,46 @@ class VendorOrderController extends ChangeNotifier {
   List<OrderModel> _activeDeliveries = [];
   List<OrderModel> _allOrders = [];
   OrderModel? _selectedOrder;
+  StreamSubscription? _orderSubscription;
   
   bool get isLoading => _isLoading;
   List<OrderModel> get incomingOrders => _incomingOrders;
   List<OrderModel> get activeDeliveries => _activeDeliveries;
   List<OrderModel> get allOrders => _allOrders;
   OrderModel? get selectedOrder => _selectedOrder;
+
+  // Get real vendor ID from AuthController
+  Future<String> _getCurrentVendorId() async {
+    final authController = AuthController();
+    final userId = authController.currentUser?.id;
+    
+    if (userId == null) {
+      throw Exception('No authenticated user found');
+    }
+    
+    final vendor = await _vendorService.getVendorByUserId(userId!);
+    if (vendor == null) {
+      throw Exception('No vendor profile found for user');
+    }
+    
+    return vendor.id;
+  }
   
+  Future<void> loadOrders() async {
+    _setLoading(true);
+    
+    try {
+      final vendorId = await _getCurrentVendorId();
+      _incomingOrders = await _vendorService.getIncomingOrders(vendorId);
+      _activeDeliveries = await _vendorService.getActiveDeliveries(vendorId);
+      _allOrders = await _vendorService.getVendorOrders(vendorId);
+    } catch (e) {
+      print('Error loading orders: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> loadOrders(String vendorId) async {
     _setLoading(true);
     
@@ -88,27 +123,65 @@ class VendorOrderController extends ChangeNotifier {
   Future<void> getOrderById(String orderId) async {
     _setLoading(true);
     try {
-      // Try local cache first
-      final cached = _allOrders.where((o) => o.id == orderId).toList();
-      if (cached.isNotEmpty) {
-        _selectedOrder = cached.first;
-        return;
+      // First try to get from DB directly
+      final order = await _vendorService.getOrderById(orderId);
+      if (order != null) {
+        _selectedOrder = order;
+      } else {
+        _selectedOrder = null;
       }
-
-      // Fall back: reload and pick
-      await loadOrders('temp_vendor_id');
-      _selectedOrder = _allOrders.where((o) => o.id == orderId).cast<OrderModel?>().firstWhere(
-            (o) => o != null,
-            orElse: () => null,
-          );
+    } catch (e) {
+      print('Error fetching order: $e');
+      _selectedOrder = null;
     } finally {
       _setLoading(false);
-      notifyListeners();
     }
   }
   
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  // Start listening for new orders
+  Future<void> startListeningForOrders() async {
+    try {
+      final vendorId = await _getCurrentVendorId();
+      
+      _orderSubscription = SupabaseConfig.client
+          .from('orders')
+          .stream(primaryKey: ['id'])
+          .eq('vendor_id', vendorId)
+          .inFilter('status', ['pending', 'placed'])
+          .listen((event) {
+        // Show notification for new orders
+        if (event.new != null && event.old == null) {
+          _showNewOrderNotification(event.new! as Map<String, dynamic>);
+        }
+        // Reload orders to update UI
+        loadOrders();
+      });
+    } catch (e) {
+      print('Error starting order listener: $e');
+    }
+  }
+
+  // Stop listening for orders
+  void stopListeningForOrders() {
+    _orderSubscription?.cancel();
+    _orderSubscription = null;
+  }
+
+  // Show notification for new order
+  void _showNewOrderNotification(Map<String, dynamic> orderData) {
+    // This would integrate with your notification service
+    print('New order received: ${orderData['id']}');
+    // You can integrate with your existing NotificationService here
+  }
+
+  @override
+  void dispose() {
+    stopListeningForOrders();
+    super.dispose();
   }
 } 
