@@ -47,9 +47,9 @@ class RouteGenerator {
           return MaterialPageRoute(builder: (_) => const VendorRegistrationScreen());
         }
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
-      case AppRoutes.customerRegister:
+      case AppRoutes.customerRegistration:
         return MaterialPageRoute(builder: (_) => const CustomerRegistrationScreen());
-      case AppRoutes.vendorRegister:
+      case AppRoutes.vendorRegistration:
         return MaterialPageRoute(builder: (_) => const VendorRegistrationScreen());
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());

@@ -12,6 +12,8 @@ class VendorModel {
   final bool isVerified;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final int? maxLitersPerTrip;
+  final String? vehicleType;
   
   VendorModel({
     required this.id,
@@ -27,6 +29,8 @@ class VendorModel {
     this.isVerified = false,
     required this.createdAt,
     this.updatedAt,
+    this.maxLitersPerTrip,
+    this.vehicleType,
   });
   
   factory VendorModel.fromJson(Map<String, dynamic> json) {
@@ -46,6 +50,8 @@ class VendorModel {
       updatedAt: json['updated_at'] != null 
           ? DateTime.parse(json['updated_at'] as String) 
           : null,
+      maxLitersPerTrip: json['max_liters_per_trip'] as int?,
+      vehicleType: json['vehicle_type'] as String?,
     );
   }
   
@@ -64,6 +70,8 @@ class VendorModel {
       'is_verified': isVerified,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'max_liters_per_trip': maxLitersPerTrip,
+      'vehicle_type': vehicleType,
     };
   }
   
@@ -81,6 +89,8 @@ class VendorModel {
     bool? isVerified,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? maxLitersPerTrip,
+    String? vehicleType,
   }) {
     return VendorModel(
       id: id ?? this.id,
@@ -96,6 +106,8 @@ class VendorModel {
       isVerified: isVerified ?? this.isVerified,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      maxLitersPerTrip: maxLitersPerTrip ?? this.maxLitersPerTrip,
+      vehicleType: vehicleType ?? this.vehicleType,
     );
   }
 }

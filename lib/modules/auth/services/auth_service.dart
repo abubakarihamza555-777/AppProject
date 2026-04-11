@@ -16,7 +16,7 @@ class AuthService {
     Map<String, dynamic>? additionalData,
   }) async {
     try {
-      // Create user in Supabase Auth
+      // Create user in Supabase Auth with user metadata
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
@@ -31,45 +31,17 @@ class AuthService {
         throw Exception('Failed to create user account');
       }
 
-      // Save additional user data to users table
-      final userData = {
-        'id': response.user!.id,
-        'email': email,
-        'full_name': fullName,
-        'phone': phone,
-        'role': role,
-        'created_at': DateTime.now().toIso8601String(),
-        'is_active': true,
-      };
+      // Wait a moment for trigger to complete
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      // Add additional data based on role
-      if (role == 'customer' && additionalData != null) {
-        userData.addAll({
-          'district_id': additionalData['district_id'],
-          'ward_id': additionalData['ward_id'],
-          'street': additionalData['street'],
-          'house_number': additionalData['house_number'],
-          'landmark': additionalData['landmark'],
-          'is_truck_accessible': additionalData['is_truck_accessible'] ?? true,
-        });
-      } else if (role == 'vendor' && additionalData != null) {
-        userData.addAll({
-          'business_name': additionalData['business_name'],
-          'owner_name': additionalData['owner_name'],
-          'vehicle_type': additionalData['vehicle_type'],
-          'max_delivery_liters': additionalData['max_delivery_liters'],
-          'can_negotiate_large_orders': additionalData['can_negotiate_large_orders'] ?? false,
-        });
-      }
+      // Fetch the user that was created by Supabase trigger
+      final userData = await _supabase
+          .from(SupabaseTables.users)
+          .select()
+          .eq('id', response.user!.id)
+          .single();
 
-      // Insert into users table
-      final insertResponse = await _supabase.from(SupabaseTables.users).insert(userData).select();
-
-      if (insertResponse.isEmpty) {
-        throw Exception('Failed to save user data');
-      }
-
-      // Create role-specific profile
+      // Create role-specific profile only (users table already handled by trigger)
       if (role == 'customer' && additionalData != null) {
         await _supabase.from('customers').insert({
           'user_id': response.user!.id,
@@ -94,7 +66,8 @@ class AuthService {
         });
       }
 
-      return UserModel.fromJson(insertResponse.first);
+      return UserModel.fromJson(userData);
+      
     } catch (e) {
       throw Exception('Registration failed: ${e.toString()}');
     }
@@ -253,21 +226,13 @@ class AuthService {
   // Add social sign in methods
   Future<UserModel?> signInWithGoogle() async {
     try {
-      final response = await _supabase.auth.signInWithOAuth(
-        Provider.google,
+      await _supabase.auth.signInWithOAuth(
+        OAuthProvider.google,
         redirectTo: 'io.supabase.flutter://callback',
       );
       
-      if (response.user != null) {
-        return UserModel(
-          id: response.user!.id,
-          email: response.user!.email ?? '',
-          fullName: response.user!.userMetadata?['full_name'] ?? 'Google User',
-          phone: response.user!.phone ?? '',
-          role: response.user!.userMetadata?['role'] ?? 'customer',
-          createdAt: DateTime.now(),
-        );
-      }
+      // OAuth sign-in is handled by the redirect, so we just return null here
+      // The actual user data will be available after the redirect
       return null;
     } catch (e) {
       print('Google sign in error: $e');
@@ -277,21 +242,13 @@ class AuthService {
   
   Future<UserModel?> signInWithFacebook() async {
     try {
-      final response = await _supabase.auth.signInWithOAuth(
-        Provider.facebook,
+      await _supabase.auth.signInWithOAuth(
+        OAuthProvider.facebook,
         redirectTo: 'io.supabase.flutter://callback',
       );
       
-      if (response.user != null) {
-        return UserModel(
-          id: response.user!.id,
-          email: response.user!.email ?? '',
-          fullName: response.user!.userMetadata?['full_name'] ?? 'Facebook User',
-          phone: response.user!.phone ?? '',
-          role: response.user!.userMetadata?['role'] ?? 'customer',
-          createdAt: DateTime.now(),
-        );
-      }
+      // OAuth sign-in is handled by the redirect, so we just return null here
+      // The actual user data will be available after the redirect
       return null;
     } catch (e) {
       print('Facebook sign in error: $e');
@@ -301,21 +258,13 @@ class AuthService {
   
   Future<UserModel?> signInWithApple() async {
     try {
-      final response = await _supabase.auth.signInWithOAuth(
-        Provider.apple,
+      await _supabase.auth.signInWithOAuth(
+        OAuthProvider.apple,
         redirectTo: 'io.supabase.flutter://callback',
       );
       
-      if (response.user != null) {
-        return UserModel(
-          id: response.user!.id,
-          email: response.user!.email ?? '',
-          fullName: response.user!.userMetadata?['full_name'] ?? 'Apple User',
-          phone: response.user!.phone ?? '',
-          role: response.user!.userMetadata?['role'] ?? 'customer',
-          createdAt: DateTime.now(),
-        );
-      }
+      // OAuth sign-in is handled by the redirect, so we just return null here
+      // The actual user data will be available after the redirect
       return null;
     } catch (e) {
       print('Apple sign in error: $e');

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/vendor_service.dart';
 import '../../customer/models/order_model.dart';
@@ -37,28 +38,22 @@ class VendorOrderController extends ChangeNotifier {
     return vendor.id;
   }
   
-  Future<void> loadOrders() async {
+  Future<void> loadOrders([String? vendorId]) async {
     _setLoading(true);
     
     try {
-      final vendorId = await _getCurrentVendorId();
-      _incomingOrders = await _vendorService.getIncomingOrders(vendorId);
-      _activeDeliveries = await _vendorService.getActiveDeliveries(vendorId);
-      _allOrders = await _vendorService.getVendorOrders(vendorId);
-    } catch (e) {
-      print('Error loading orders: $e');
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<void> loadOrders(String vendorId) async {
-    _setLoading(true);
-    
-    try {
-      _incomingOrders = await _vendorService.getIncomingOrders(vendorId);
-      _activeDeliveries = await _vendorService.getActiveDeliveries(vendorId);
-      _allOrders = await _vendorService.getVendorOrders(vendorId);
+      if (vendorId != null) {
+        _incomingOrders = await _vendorService.getIncomingOrders(vendorId);
+        _activeDeliveries = await _vendorService.getActiveDeliveries(vendorId);
+        _allOrders = await _vendorService.getVendorOrders(vendorId);
+      } else {
+        final currentVendorId = await _getCurrentVendorId();
+        if (currentVendorId != null) {
+          _incomingOrders = await _vendorService.getIncomingOrders(currentVendorId);
+          _activeDeliveries = await _vendorService.getActiveDeliveries(currentVendorId);
+          _allOrders = await _vendorService.getVendorOrders(currentVendorId);
+        }
+      }
     } catch (e) {
       print('Error loading orders: $e');
     } finally {
@@ -152,11 +147,15 @@ class VendorOrderController extends ChangeNotifier {
           .from('orders')
           .stream(primaryKey: ['id'])
           .eq('vendor_id', vendorId)
-          .inFilter('status', ['pending', 'placed'])
           .listen((event) {
         // Show notification for new orders
-        if (event.new != null && event.old == null) {
-          _showNewOrderNotification(event.new! as Map<String, dynamic>);
+        if (event.isNotEmpty) {
+          // Check if this is a new order by looking at the first event
+          for (final orderData in event) {
+            if (orderData['status'] == 'pending' || orderData['status'] == 'placed') {
+              _showNewOrderNotification(orderData);
+            }
+          }
         }
         // Reload orders to update UI
         loadOrders();

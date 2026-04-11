@@ -291,9 +291,12 @@ class VendorService {
   // Toggle vendor availability
   Future<bool> toggleVendorAvailability(String vendorId) async {
     try {
+      // Get current status first
+      final currentStatus = await getVendorAvailability(vendorId);
+      
       await _supabase
           .from('vendors')
-          .update({'is_active': !_supabase.rpc('get_vendor_status', params: {'vendor_id': vendorId})})
+          .update({'is_active': !currentStatus})
           .eq('id', vendorId);
       return true;
     } catch (e) {
@@ -343,6 +346,22 @@ class VendorService {
     } catch (e) {
       print('Get remaining capacity error: $e');
       return 0;
+    }
+  }
+  
+  // Get order by ID
+  Future<OrderModel?> getOrderById(String orderId) async {
+    try {
+      final response = await SupabaseConfig.client
+          .from('orders')
+          .select()
+          .eq('id', orderId)
+          .single();
+      
+      return OrderModel.fromJson(response);
+    } catch (e) {
+      print('Get order by ID error: $e');
+      return null;
     }
   }
 }

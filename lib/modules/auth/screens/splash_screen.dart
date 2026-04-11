@@ -125,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen>
                     'Pure Water, Smart Delivery',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white.withAlpha(0.9),
+                      color: Colors.white.withAlpha((0.9 * 255).round()),
                       letterSpacing: 1,
                     ),
                   ),

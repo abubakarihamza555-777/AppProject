@@ -36,30 +36,22 @@ class VendorProfileController extends ChangeNotifier {
   }
   
   // Load vendor profile
-  Future<void> loadVendorProfile([String? vendorId]) async {
+  Future<void> loadVendorProfile() async {
     _setLoading(true);
-    
     try {
-      if (vendorId != null) {
-        _vendorProfile = await _vendorService.getVendorById(vendorId);
-      } else {
-        // Load by current user ID
-        final userId = supabase.auth.currentUser?.id;
-        if (userId != null) {
-          final response = await supabase
-              .from('vendors')
-              .select('*')
-              .eq('user_id', userId)
-              .maybeSingle();
-          
-          if (response != null) {
-            _vendorProfile = VendorModel.fromJson(response);
-            _profileData = response;
-          }
-        }
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      final vendor = await _vendorService.getVendorByUserId(userId);
+      if (vendor != null) {
+        _vendorProfile = vendor;
+        _profileData = vendor.toJson();
       }
     } catch (e) {
       _errorMessage = e.toString();
+      print('Error loading vendor profile: $e');
     } finally {
       _setLoading(false);
     }

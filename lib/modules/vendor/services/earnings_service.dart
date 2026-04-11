@@ -87,7 +87,9 @@ class EarningsService {
       case 'weekly':
         // Get start of week (Monday)
         final startOfWeek = date.subtract(Duration(days: date.weekday - 1));
-        return '${startOfWeek.year}-W${startOfWeek.week.toString().padLeft(2, '0')}';
+        // Calculate week number manually
+        final weekNumber = ((startOfWeek.difference(DateTime(startOfWeek.year, 1, 1)).inDays + startOfWeek.weekday - 1) / 7).floor() + 1;
+        return '${startOfWeek.year}-W${weekNumber.toString().padLeft(2, '0')}';
       case 'monthly':
         return '${date.year}-${date.month.toString().padLeft(2, '0')}';
       case 'yearly':

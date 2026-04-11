@@ -19,13 +19,15 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _localAuth = LocalAuthentication();
   bool _rememberMe = false;
   bool _isLoading = false;
+  bool _obscurePassword = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -177,13 +179,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     }
   }
 
-  void _navigateToHome(UserModel user) async {
+  void _navigateToHome(UserModel user) {
     final profileCompletionService = context.read<ProfileCompletionService>();
     final notificationService = context.read<NotificationService>();
     
     switch (user.role) {
       case 'customer':
-        if (await profileCompletionService.shouldShowCustomerProfilePrompt()) {
+        if (profileCompletionService.shouldShowCustomerProfilePrompt()) {
           _showProfileCompletionDialog(
             context, 
             'customer', 
@@ -196,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         }
         return;
       case 'vendor':
-        if (await profileCompletionService.shouldShowVendorProfilePrompt()) {
+        if (profileCompletionService.shouldShowVendorProfilePrompt()) {
           _showProfileCompletionDialog(
             context, 
             'vendor', 

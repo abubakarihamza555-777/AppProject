@@ -8,7 +8,7 @@ import '../../../shared/widgets/notification_icon.dart';
 import '../../../localization/language_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../controllers/vendor_dashboard_controller.dart';
-import '../../../shared/widgets/notification_screen.dart';
+import '../../../shared/widgets/notification_screen.dart' as notification_screen;
 
 class PremiumVendorDashboard extends StatefulWidget {
   const PremiumVendorDashboard({super.key});
@@ -167,7 +167,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const NotificationScreen(),
+                              builder: (context) => const notification_screen.NotificationScreen(),
                             ),
                           );
                         },
