@@ -1,8 +1,10 @@
+// lib/modules/auth/screens/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../config/routes/app_routes.dart';
 import '../controllers/auth_controller.dart';
+import '../../../shared/services/profile_completion_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
     );
     _controller.forward();
-    _navigateAfterDelay();
+    _checkAuthAndNavigate();
   }
 
   @override
@@ -38,105 +40,138 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  Future<void> _navigateAfterDelay() async {
+  Future<void> _checkAuthAndNavigate() async {
+    // Wait for animation
     await Future.delayed(const Duration(seconds: 2));
+    
     if (!mounted) return;
 
+    // Initialize auth controller
     final authController = context.read<AuthController>();
-
-    // Check if user is authenticated in Supabase
-    if (authController.isAuthenticated()) {
-      try {
-        // Load user data
-        await authController.loadCurrentUser();
-        final user = authController.currentUser;
-        
-        if (user != null) {
-          switch (user.role) {
-            case 'customer':
+    await authController.initialize();
+    
+    // Check if user is authenticated
+    if (authController.isAuthenticated) {
+      final user = authController.currentUser;
+      final profileService = ProfileCompletionService();
+      
+      if (user != null) {
+        switch (user.role) {
+          case 'customer':
+            // Check if profile is completed
+            final isProfileCompleted = await profileService.isCustomerProfileCompleted();
+            if (isProfileCompleted) {
               Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
-              return;
-            case 'vendor':
+            } else {
+              Navigator.pushReplacementNamed(context, AppRoutes.customerProfileCompletion);
+            }
+            break;
+            
+          case 'vendor':
+            final isProfileCompleted = await profileService.isVendorProfileCompleted();
+            if (isProfileCompleted) {
               Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
-              return;
-            case 'admin':
-              Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
-              return;
-          }
+            } else {
+              Navigator.pushReplacementNamed(context, AppRoutes.vendorProfileCompletion);
+            }
+            break;
+            
+          case 'admin':
+            Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
+            break;
+            
+          default:
+            Navigator.pushReplacementNamed(context, AppRoutes.roleSelection);
         }
-      } catch (e) {
-        print('Error loading user data: $e');
-        // If there's an error loading user data, go to role selection
+      } else {
+        Navigator.pushReplacementNamed(context, AppRoutes.roleSelection);
       }
+    } else {
+      // Not authenticated, go to role selection
+      Navigator.pushReplacementNamed(context, AppRoutes.roleSelection);
     }
-
-    // Navigate to role selection for new users
-    Navigator.pushReplacementNamed(context, AppRoutes.roleSelection);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.blue.shade800,
-              Colors.blue.shade600,
-              Colors.cyan.shade400,
-            ],
-          ),
-        ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fadeIn,
-            child: ScaleTransition(
-              scale: _scale,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Shimmer.fromColors(
-                    baseColor: Colors.white70,
-                    highlightColor: Colors.white,
-                    child: const Icon(
-                      Icons.water_drop,
-                      size: 100,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Shimmer.fromColors(
-                    baseColor: Colors.white70,
-                    highlightColor: Colors.white,
-                    child: Text(
-                      'Dar Water',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+      backgroundColor: Colors.white,
+      body: Center(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return FadeTransition(
+              opacity: _fadeIn,
+              child: ScaleTransition(
+                scale: _scale,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // App Logo/Icon
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(20),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.water_drop,
                         color: Colors.white,
-                        letterSpacing: 2,
+                        size: 60,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Pure Water, Smart Delivery',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withAlpha((0.9 * 255).round()),
-                      letterSpacing: 1,
+                    const SizedBox(height: 30),
+                    
+                    // App Name
+                    Shimmer.fromColors(
+                      baseColor: Theme.of(context).primaryColor,
+                      highlightColor: Theme.of(context).primaryColor.withAlpha(76),
+                      child: const Text(
+                        'Water Delivery',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 50),
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    
+                    // Tagline
+                    Text(
+                      'Fresh Water at Your Doorstep',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+                    
+                    // Loading indicator
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

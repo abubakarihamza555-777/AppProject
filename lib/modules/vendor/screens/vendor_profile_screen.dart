@@ -26,9 +26,17 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     _loadProfile();
   }
 
+  @override
+  void dispose() {
+    _businessNameController.dispose();
+    _businessPhoneController.dispose();
+    _businessAddressController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadProfile() async {
     final controller = context.read<VendorProfileController>();
-    await controller.loadVendorProfile(); // Use real vendor ID from controller
+    await controller.loadVendorProfile();
     _updateControllers();
   }
 
@@ -41,27 +49,42 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
     }
   }
 
-  // Helper method to get vehicle type name
   String _getVehicleTypeName(String? vehicleType) {
     switch (vehicleType) {
       case 'towable':
-        return 'Towable Browser';
+        return 'Towable Browser (400-2000L)';
       case 'medium_truck':
-        return 'Medium Truck';
+        return 'Medium Truck (3000-5000L)';
       case 'heavy_truck':
-        return 'Heavy Truck';
+        return 'Heavy Duty Truck (8000-16000L)';
       default:
-        return 'Unknown';
+        return vehicleType ?? 'Not specified';
     }
+  }
+
+  String _formatServiceAreas(List<int> serviceAreas) {
+    if (serviceAreas.isEmpty) return 'No service areas selected';
+    
+    // Map district IDs to names (you can expand this)
+    final districtNames = {
+      1: 'Ilala',
+      2: 'Temeke',
+      3: 'Kinondoni',
+      4: 'Ubungo',
+      5: 'Kigamboni',
+    };
+    
+    final names = serviceAreas.map((id) => districtNames[id] ?? 'District $id').toList();
+    return names.join(', ');
   }
 
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       final controller = context.read<VendorProfileController>();
       final success = await controller.updateProfile(
-        businessName: _businessNameController.text,
-        businessPhone: _businessPhoneController.text,
-        businessAddress: _businessAddressController.text,
+        businessName: _businessNameController.text.trim(),
+        businessPhone: _businessPhoneController.text.trim(),
+        businessAddress: _businessAddressController.text.trim(),
       );
 
       if (success && mounted) {
@@ -72,6 +95,13 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
           ),
         );
         controller.toggleEditing();
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(controller.errorMessage ?? 'Failed to update profile'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -80,12 +110,14 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
     final controller = Provider.of<VendorProfileController>(context);
+    final profile = controller.vendorProfile;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(languageProvider.translate('vendor_profile')),
+        centerTitle: true,
         actions: [
-          if (!controller.isEditing && controller.vendorProfile != null)
+          if (!controller.isEditing && profile != null)
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: controller.toggleEditing,
@@ -94,9 +126,24 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       ),
       body: controller.isLoading
           ? const LoadingIndicator()
-          : controller.vendorProfile == null
+          : profile == null
               ? Center(
-                  child: Text(languageProvider.translate('profile_not_found')),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.store_outlined, size: 64, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Vendor profile not found',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => _loadProfile(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 )
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
@@ -112,7 +159,7 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                                 radius: 50,
                                 backgroundColor: Theme.of(context).primaryColor,
                                 child: Text(
-                                  controller.vendorProfile!.businessName.initials,
+                                  profile.businessName.initials,
                                   style: const TextStyle(
                                     fontSize: 40,
                                     color: Colors.white,
@@ -130,7 +177,13 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                                       icon: const Icon(Icons.camera_alt, size: 16),
                                       color: Colors.white,
                                       onPressed: () {
-                                        // Change profile picture
+                                        // TODO: Implement profile picture upload
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Profile picture upload coming soon'),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
                                       },
                                     ),
                                   ),
@@ -146,6 +199,12 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           controller: _businessNameController,
                           readOnly: !controller.isEditing,
                           prefixIcon: Icons.business,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter business name';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
 
@@ -156,6 +215,12 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           readOnly: !controller.isEditing,
                           isPhone: true,
                           prefixIcon: Icons.phone,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter business phone';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
 
@@ -166,79 +231,178 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           readOnly: !controller.isEditing,
                           maxLines: 2,
                           prefixIcon: Icons.location_on,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter business address';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
 
-                        // Business License (Read-only)
-                        TextFormField(
-                          initialValue: controller.vendorProfile!.businessLicense ?? 'Not provided',
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            labelText: languageProvider.translate('business_license'),
-                            prefixIcon: const Icon(Icons.document_scanner),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
+                        // Business License (Read-only from profile completion)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.document_scanner, color: Colors.grey),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Business License',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      profile.businessLicense ?? 'Not provided',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
 
-                        // Vehicle Type (Read-only)
-                        TextFormField(
-                          initialValue: _getVehicleTypeName(controller.vendorProfile?.vehicleType),
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            labelText: 'Vehicle Type',
-                            prefixIcon: const Icon(Icons.directions_car),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
+                        // Vehicle Type (Read-only from profile completion)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.directions_car, color: Colors.grey),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Vehicle Type',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      _getVehicleTypeName(profile.vehicleType),
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
 
-                        // Max Liters Per Trip (Read-only)
-                        TextFormField(
-                          initialValue: '${controller.vendorProfile?.maxLitersPerTrip ?? 0} L',
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            labelText: 'Max Liters Per Trip',
-                            prefixIcon: const Icon(Icons.water_drop),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey.shade50,
+                        // Max Liters Per Trip (Read-only from profile completion)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.water_drop, color: Colors.grey),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Max Capacity',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${profile.maxLitersPerTrip ?? 0} Liters',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
 
-                        // Verification Status
+                        // Service Areas (Read-only from profile completion)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.location_city, color: Colors.grey),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Service Areas',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatServiceAreas(profile.serviceAreas),
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Verification Status (Read-only from profile completion)
                         Card(
-                          color: controller.vendorProfile?.isVerified == true 
+                          color: profile.isVerified 
                               ? Colors.green.shade50 
                               : Colors.orange.shade50,
                           child: ListTile(
                             leading: Icon(
-                              controller.vendorProfile?.isVerified == true 
+                              profile.isVerified 
                                   ? Icons.verified 
                                   : Icons.pending,
-                              color: controller.vendorProfile?.isVerified == true 
+                              color: profile.isVerified 
                                   ? Colors.green 
                                   : Colors.orange,
                             ),
                             title: Text(
-                              controller.vendorProfile?.isVerified == true 
+                              profile.isVerified 
                                   ? 'Verified Vendor' 
                                   : 'Pending Verification',
                               style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
-                              controller.vendorProfile?.isVerified == true 
+                              profile.isVerified 
                                   ? 'Your business is verified' 
                                   : 'Your profile is under review',
                             ),
@@ -251,14 +415,17 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           child: SwitchListTile(
                             title: Text(languageProvider.translate('available_for_orders')),
                             subtitle: Text(
-                              controller.vendorProfile!.isActive
+                              profile.isActive
                                   ? languageProvider.translate('accepting_orders')
                                   : languageProvider.translate('not_accepting_orders'),
                             ),
-                            value: controller.vendorProfile!.isActive,
-                            onChanged: (_) async {
-                              await controller.toggleAvailability();
-                            },
+                            value: profile.isActive,
+                            onChanged: controller.isEditing
+                                ? (_) async {
+                                    await controller.toggleAvailability();
+                                    _loadProfile(); // Refresh after toggle
+                                  }
+                                : null,
                           ),
                         ),
                         const SizedBox(height: 24),

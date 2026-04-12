@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../localization/language_provider.dart';
 import '../controllers/auth_controller.dart';
@@ -27,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _localAuth = LocalAuthentication();
   bool _rememberMe = false;
   bool _isLoading = false;
-  bool _obscurePassword = true;
+  final bool _obscurePassword = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -109,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen>
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Biometric authentication failed'),
           backgroundColor: Colors.red,
         ),

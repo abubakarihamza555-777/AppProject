@@ -25,6 +25,8 @@ import '../../modules/admin/screens/manage_users_screen.dart';
 import '../../modules/admin/screens/manage_orders_screen.dart';
 import '../../modules/admin/screens/reports_screen.dart';
 import '../../modules/admin/screens/payment_monitoring_screen.dart';
+import '../../modules/customer/screens/customer_profile_completion_screen.dart';
+import '../../modules/vendor/screens/vendor_profile_completion_screen.dart';
 import '../../modules/chat/screens/chat_screen.dart';
 import '../../modules/chat/screens/conversations_list_screen.dart';
 
@@ -75,6 +77,10 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => const OrderHistoryScreen());
       case AppRoutes.profile:
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      case AppRoutes.customerProfileCompletion:
+        return MaterialPageRoute(builder: (_) => const CustomerProfileCompletionScreen());
+      case AppRoutes.vendorProfileCompletion:
+        return MaterialPageRoute(builder: (_) => const VendorProfileCompletionScreen());
       
       // Vendor routes
       case AppRoutes.vendorDashboard:

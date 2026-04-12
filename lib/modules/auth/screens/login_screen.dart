@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../localization/language_provider.dart';
 import '../controllers/auth_controller.dart';
 import '../models/user_model.dart';
-import '../services/auth_service.dart';
 import '../../../config/routes/app_routes.dart';
 import '../../../shared/services/profile_completion_service.dart';
 import '../../../shared/services/notification_service.dart';
@@ -107,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Biometric authentication failed'),
           backgroundColor: Colors.red,
         ),
@@ -115,64 +113,79 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     }
   }
 
-  Future<void> _handleSocialLogin(String provider) async {
-    setState(() => _isLoading = true);
-    
-    try {
-      final authService = AuthService();
-      UserModel? user;
-      
-      switch (provider) {
-        case 'google':
-          user = await authService.signInWithGoogle();
-          break;
-        case 'facebook':
-          user = await authService.signInWithFacebook();
-          break;
-        case 'apple':
-          user = await authService.signInWithApple();
-          break;
-      }
-      
-      if (user != null) {
-        _navigateToHome(user);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Social login failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+    // Prevent multiple simultaneous login attempts
+    if (_isLoading) return;
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authController = context.read<AuthController>();
+      final success = await authController.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
       
-      try {
-        final authService = AuthService();
-        final user = await authService.signIn(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+      if (success && mounted) {
+        // Save credentials if remember me is checked
+        if (_rememberMe) {
+          await _saveCredentials();
+        }
+        
+        // Get the user to determine navigation
+        final user = authController.currentUser;
+        final profileService = ProfileCompletionService();
         
         if (user != null) {
-          await _saveCredentials();
-          _navigateToHome(user);
+          switch (user.role) {
+            case 'customer':
+              final isProfileCompleted = await profileService.isCustomerProfileCompleted();
+              if (mounted) {
+                if (isProfileCompleted) {
+                  Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
+                } else {
+                  Navigator.pushReplacementNamed(context, AppRoutes.customerProfileCompletion);
+                }
+              }
+              break;
+              
+            case 'vendor':
+              final isProfileCompleted = await profileService.isVendorProfileCompleted();
+              if (mounted) {
+                if (isProfileCompleted) {
+                  Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
+                } else {
+                  Navigator.pushReplacementNamed(context, AppRoutes.vendorProfileCompletion);
+                }
+              }
+              break;
+              
+            case 'admin':
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
+              }
+              break;
+              
+            default:
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
+              }
+          }
+        } else if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.roleSelection);
         }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } finally {
+      } else if (mounted) {
         setState(() => _isLoading = false);
+        _showSnackBar(
+          authController.errorMessage ?? 'Login failed',
+          Colors.red,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showSnackBar('Login failed: ${e.toString()}', Colors.red);
       }
     }
   }
@@ -531,44 +544,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   
                   const SizedBox(height: 30),
                   
-                  // Social Login Section
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'Or continue with',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      ),
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Social Login Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _SocialLoginCircle(
-                        icon: 'assets/icons/google.png',
-                        onTap: () => _handleSocialLogin('google'),
-                      ),
-                      _SocialLoginCircle(
-                        icon: 'assets/icons/facebook.png',
-                        onTap: () => _handleSocialLogin('facebook'),
-                      ),
-                      _SocialLoginCircle(
-                        icon: 'assets/icons/apple.png',
-                        onTap: () => _handleSocialLogin('apple'),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 30),
-                  
                   // Sign Up Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -600,38 +575,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       ),
     );
   }
-}
 
-class _SocialLoginCircle extends StatelessWidget {
-  final String icon;
-  final VoidCallback onTap;
-
-  const _SocialLoginCircle({
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 50,
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Image.asset(icon),
-        ),
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: const Duration(seconds: 3),
       ),
     );
   }

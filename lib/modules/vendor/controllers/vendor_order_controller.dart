@@ -30,7 +30,7 @@ class VendorOrderController extends ChangeNotifier {
       throw Exception('No authenticated user found');
     }
     
-    final vendor = await _vendorService.getVendorByUserId(userId!);
+    final vendor = await _vendorService.getVendorByUserId(userId);
     if (vendor == null) {
       throw Exception('No vendor profile found for user');
     }
@@ -48,12 +48,10 @@ class VendorOrderController extends ChangeNotifier {
         _allOrders = await _vendorService.getVendorOrders(vendorId);
       } else {
         final currentVendorId = await _getCurrentVendorId();
-        if (currentVendorId != null) {
-          _incomingOrders = await _vendorService.getIncomingOrders(currentVendorId);
-          _activeDeliveries = await _vendorService.getActiveDeliveries(currentVendorId);
-          _allOrders = await _vendorService.getVendorOrders(currentVendorId);
-        }
-      }
+        _incomingOrders = await _vendorService.getIncomingOrders(currentVendorId);
+        _activeDeliveries = await _vendorService.getActiveDeliveries(currentVendorId);
+        _allOrders = await _vendorService.getVendorOrders(currentVendorId);
+            }
     } catch (e) {
       print('Error loading orders: $e');
     } finally {

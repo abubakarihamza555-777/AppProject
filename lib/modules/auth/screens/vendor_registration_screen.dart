@@ -23,7 +23,7 @@ class _VendorRegistrationScreenState extends State<VendorRegistrationScreen> {
   
   bool _agreeToTerms = false;
   bool _isLoading = false;
-  int _currentStep = 1; // 1: Account, 2: Profile, 3: Complete
+  final int _currentStep = 1; // 1: Account, 2: Profile, 3: Complete
 
   @override
   void dispose() {

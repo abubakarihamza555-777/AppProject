@@ -1,245 +1,212 @@
+// lib/modules/vendor/controllers/vendor_profile_controller.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/vendor_service.dart';
 import '../models/vendor_model.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 class VendorProfileController extends ChangeNotifier {
-  final VendorService _vendorService = VendorService();
-  final supabase = Supabase.instance.client;
+  final SupabaseClient _supabase = Supabase.instance.client;
   
-  bool _isLoading = false;
   VendorModel? _vendorProfile;
+  bool _isLoading = false;
   bool _isEditing = false;
-  String _errorMessage = '';
-  Map<String, dynamic> _profileData = {};
+  String? _errorMessage;
   
-  bool get isLoading => _isLoading;
   VendorModel? get vendorProfile => _vendorProfile;
+  bool get isLoading => _isLoading;
   bool get isEditing => _isEditing;
-  String get errorMessage => _errorMessage;
-  Map<String, dynamic> get profileData => _profileData;
+  String? get errorMessage => _errorMessage;
   
-  // Calculate profile completion percentage
-  int calculateCompletionPercentage(Map<String, dynamic> data) {
-    int completed = 0;
-    int total = 7; // Total fields to complete
-    
-    if (data['business_name'] != null && data['business_name'].toString().isNotEmpty) completed++;
-    if (data['business_phone'] != null && data['business_phone'].toString().isNotEmpty) completed++;
-    if (data['business_address'] != null && data['business_address'].toString().isNotEmpty) completed++;
-    if (data['business_license'] != null && data['business_license'].toString().isNotEmpty) completed++;
-    if (data['profile_image'] != null && data['profile_image'].toString().isNotEmpty) completed++;
-    if (data['vehicle_type'] != null && data['vehicle_type'].toString().isNotEmpty) completed++;
-    if (data['max_liters_per_trip'] != null && data['max_liters_per_trip'].toString().isNotEmpty) completed++;
-    
-    return ((completed / total) * 100).round();
-  }
-  
-  // Load vendor profile
-  Future<void> loadVendorProfile([String? vendorId]) async {
-    _setLoading(true);
+  Future<void> loadVendorProfile() async {
+    setLoading(true);
+    _clearError();
     
     try {
-      if (vendorId != null) {
-        _vendorProfile = await _vendorService.getVendorById(vendorId);
+      final authController = AuthController();
+      await authController.initialize();
+      final currentUser = authController.currentUser;
+      
+      print('🔍 Loading vendor profile for user: ${currentUser?.id}');
+      
+      if (currentUser == null) {
+        print('❌ User not authenticated');
+        setLoading(false);
+        return;
+      }
+      
+      final response = await _supabase
+          .from('vendors')
+          .select()
+          .eq('user_id', currentUser.id)
+          .maybeSingle();
+      
+      if (response != null) {
+        // VendorModel.fromJson handles all type conversions
+        _vendorProfile = VendorModel.fromJson(response);
+        print('✅ Vendor profile loaded: ${_vendorProfile?.businessName}');
       } else {
-        // Load by current user ID
-        final userId = supabase.auth.currentUser?.id;
-        if (userId != null) {
-          final response = await supabase
-              .from('vendors')
-              .select('*')
-              .eq('user_id', userId)
-              .maybeSingle();
-          
-          if (response != null) {
-            _vendorProfile = VendorModel.fromJson(response);
-            _profileData = response;
-          }
-        }
+        print('📭 No vendor profile found');
+        _vendorProfile = null;
       }
     } catch (e) {
       _errorMessage = e.toString();
+      print('❌ Load vendor profile error: $e');
     } finally {
-      _setLoading(false);
+      setLoading(false);
     }
   }
   
-  // Update vendor profile with new fields
-  Future<Map<String, dynamic>> updateVendorProfile({
-    String? businessName,
-    String? businessPhone,
-    String? businessAddress,
+  Future<bool> createOrUpdateVendorProfile({
+    required String businessName,
+    required String businessPhone,
+    required String businessAddress,
     String? businessLicense,
-    String? profileImage,
-    String? vehicleType,
-    int? maxLitersPerTrip,
+    required String vehicleType,
+    required int maxLitersPerTrip,
+    required List<int> serviceAreas,
   }) async {
-    _setLoading(true);
+    setLoading(true);
+    _clearError();
     
     try {
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) {
+      final authController = AuthController();
+      await authController.initialize();
+      final currentUser = authController.currentUser;
+      
+      if (currentUser == null) {
         throw Exception('User not authenticated');
       }
       
-      final updateData = <String, dynamic>{
-        'updated_at': DateTime.now().toIso8601String(),
+      print('=== SAVING VENDOR PROFILE ===');
+      print('User ID: ${currentUser.id}');
+      print('Business Name: $businessName');
+      print('Vehicle Type: $vehicleType');
+      print('Service Areas: $serviceAreas');
+      
+      final now = DateTime.now().toIso8601String();
+      
+      final vendorData = {
+        'user_id': currentUser.id,
+        'business_name': businessName,
+        'business_phone': businessPhone,
+        'business_address': businessAddress,
+        'business_license': businessLicense,
+        'vehicle_type': vehicleType,
+        'max_liters_per_trip': maxLitersPerTrip,
+        'service_areas': serviceAreas,
+        'is_active': true,
+        'updated_at': now,
       };
       
-      if (businessName != null) updateData['business_name'] = businessName;
-      if (businessPhone != null) updateData['business_phone'] = businessPhone;
-      if (businessAddress != null) updateData['business_address'] = businessAddress;
-      if (businessLicense != null) updateData['business_license'] = businessLicense;
-      if (profileImage != null) updateData['profile_image'] = profileImage;
-      if (vehicleType != null) updateData['vehicle_type'] = vehicleType;
-      if (maxLitersPerTrip != null) updateData['max_liters_per_trip'] = maxLitersPerTrip;
+      print('📤 Sending data to database: $vendorData');
       
-      // Check if profile exists
-      final existingProfile = await supabase
+      // Use UPSERT - Update if exists, Insert if not
+      final response = await _supabase
           .from('vendors')
-          .select('id')
-          .eq('user_id', userId)
-          .maybeSingle();
+          .upsert(vendorData, onConflict: 'user_id')
+          .select();
       
-      Map<String, dynamic> result;
+      print('✅ Upsert successful');
       
-      if (existingProfile != null) {
-        // Update existing profile
-        result = await supabase
-            .from('vendors')
-            .update(updateData)
-            .eq('user_id', userId)
-            .select()
-            .single();
-      } else {
-        // Create new profile
-        updateData.addAll({
-          'user_id': userId,
-          'created_at': DateTime.now().toIso8601String(),
-          'is_active': true,
-          'is_verified': false,
-          'rating': 0.0,
-          'total_deliveries': 0,
-        });
-        
-        result = await supabase
-            .from('vendors')
-            .insert(updateData)
-            .select()
-            .single();
+      if (response.isNotEmpty) {
+        _vendorProfile = VendorModel.fromJson(response.first);
+        print('✅ Vendor profile saved: ${_vendorProfile?.businessName}');
       }
       
-      _profileData = Map<String, dynamic>.from(result);
+      // Update user role to vendor
+      await _supabase
+          .from('users')
+          .update({'role': 'vendor', 'is_active': true})
+          .eq('id', currentUser.id);
       
-      // Check if profile is complete
-      int completionPercentage = calculateCompletionPercentage(_profileData);
+      print('✅ User role updated to vendor');
+      print('=== SAVE COMPLETED SUCCESSFULLY ===');
       
-      return {
-        'success': true,
-        'data': result,
-        'completion_percentage': completionPercentage,
-        'is_complete': completionPercentage == 100,
-      };
+      setLoading(false);
+      return true;
       
     } catch (e) {
       _errorMessage = e.toString();
-      return {
-        'success': false,
-        'error': e.toString(),
-      };
-    } finally {
-      _setLoading(false);
+      print('❌ Save error: $e');
+      
+      if (e.toString().contains('duplicate key')) {
+        print('❌ Duplicate key error - vendor already exists (upsert should handle this)');
+      } else if (e.toString().contains('permission')) {
+        print('❌ Permission error - check RLS policies');
+      } else if (e.toString().contains('column')) {
+        print('❌ Column error - check database schema');
+      } else if (e.toString().contains('type')) {
+        print('❌ Type error - check data types');
+      }
+      
+      setLoading(false);
+      return false;
     }
   }
   
-  // Legacy update method for backward compatibility
   Future<bool> updateProfile({
-    String? businessName,
-    String? businessPhone,
-    String? businessAddress,
-    String? profileImage,
+    required String businessName,
+    required String businessPhone,
+    required String businessAddress,
   }) async {
-    if (_vendorProfile == null) return false;
-    
-    _setLoading(true);
+    setLoading(true);
+    _clearError();
     
     try {
-      final data = <String, dynamic>{};
-      if (businessName != null) data['business_name'] = businessName;
-      if (businessPhone != null) data['business_phone'] = businessPhone;
-      if (businessAddress != null) data['business_address'] = businessAddress;
-      if (profileImage != null) data['profile_image'] = profileImage;
-      
-      final updated = await _vendorService.updateVendor(_vendorProfile!.id, data);
-      if (updated != null) {
-        _vendorProfile = updated;
-        return true;
+      if (_vendorProfile == null) {
+        throw Exception('Vendor profile not found');
       }
-      return false;
+      
+      final updateData = {
+        'business_name': businessName,
+        'business_phone': businessPhone,
+        'business_address': businessAddress,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      
+      final response = await _supabase
+          .from('vendors')
+          .update(updateData)
+          .eq('id', _vendorProfile!.id)
+          .select()
+          .single();
+      
+      _vendorProfile = VendorModel.fromJson(response);
+      print('✅ Profile updated successfully');
+      setLoading(false);
+      return true;
+      
     } catch (e) {
-      print('Error updating profile: $e');
+      _errorMessage = e.toString();
+      print('❌ Update profile error: $e');
+      setLoading(false);
       return false;
-    } finally {
-      _setLoading(false);
     }
   }
   
   Future<bool> toggleAvailability() async {
     if (_vendorProfile == null) return false;
     
-    _setLoading(true);
+    setLoading(true);
     
     try {
-      final success = await _vendorService.toggleVendorAvailability(_vendorProfile!.id);
-      if (success && _vendorProfile != null) {
-        _vendorProfile = _vendorProfile!.copyWith(isActive: !_vendorProfile!.isActive);
-      }
-      return success;
+      final newStatus = !_vendorProfile!.isActive;
+      await _supabase
+          .from('vendors')
+          .update({'is_active': newStatus})
+          .eq('id', _vendorProfile!.id);
+      
+      _vendorProfile = _vendorProfile!.copyWith(isActive: newStatus);
+      print('✅ Availability toggled to: $newStatus');
+      setLoading(false);
+      return true;
+      
     } catch (e) {
-      print('Error toggling availability: $e');
+      _errorMessage = e.toString();
+      print('❌ Toggle availability error: $e');
+      setLoading(false);
       return false;
-    } finally {
-      _setLoading(false);
     }
-  }
-  
-  // Get vehicle type details
-  Map<String, dynamic> getVehicleTypeDetails(String vehicleType) {
-    final vehicleTypes = {
-      'towable': {
-        'name': 'Towable Browser',
-        'description': '400-2000 Liters capacity',
-        'icon': 'agriculture',
-        'color': 'orange',
-        'min_liters': 400,
-        'max_liters': 2000,
-      },
-      'medium_truck': {
-        'name': 'Medium Truck',
-        'description': '3000-5000 Liters capacity',
-        'icon': 'local_shipping',
-        'color': 'blue',
-        'min_liters': 3000,
-        'max_liters': 5000,
-      },
-      'heavy_truck': {
-        'name': 'Heavy Duty Truck',
-        'description': '8000-16000 Liters capacity',
-        'icon': 'airport_shuttle',
-        'color': 'purple',
-        'min_liters': 8000,
-        'max_liters': 16000,
-      },
-    };
-    
-    return vehicleTypes[vehicleType] ?? vehicleTypes['towable']!;
-  }
-  
-  // Validate vehicle capacity
-  bool validateVehicleCapacity(String vehicleType, int capacity) {
-    final details = getVehicleTypeDetails(vehicleType);
-    return capacity >= details['min_liters'] && capacity <= details['max_liters'];
   }
   
   void toggleEditing() {
@@ -247,13 +214,12 @@ class VendorProfileController extends ChangeNotifier {
     notifyListeners();
   }
   
-  void clearError() {
-    _errorMessage = '';
+  void setLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
   }
   
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+  void _clearError() {
+    _errorMessage = null;
   }
 }
