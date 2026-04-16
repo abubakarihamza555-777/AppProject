@@ -17,7 +17,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       final email = prefs.getString('saved_email');
       final password = prefs.getString('saved_password');
       final remember = prefs.getBool('remember_me') ?? false;
-      
+
       if (email != null && password != null && remember) {
         setState(() {
           _emailController.text = email;
@@ -99,7 +100,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       if (authenticated) {
         // Load saved credentials and login
         await _loadSavedCredentials();
-        if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+        if (_emailController.text.isNotEmpty &&
+            _passwordController.text.isNotEmpty) {
           await _handleLogin();
         }
       }
@@ -126,47 +128,54 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      
+
       if (success && mounted) {
         // Save credentials if remember me is checked
         if (_rememberMe) {
           await _saveCredentials();
         }
-        
+
         // Get the user to determine navigation
         final user = authController.currentUser;
         final profileService = ProfileCompletionService();
-        
+
         if (user != null) {
           switch (user.role) {
             case 'customer':
-              final isProfileCompleted = await profileService.isCustomerProfileCompleted();
+              final isProfileCompleted =
+                  await profileService.isCustomerProfileCompleted();
               if (mounted) {
                 if (isProfileCompleted) {
-                  Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
+                  Navigator.pushReplacementNamed(
+                      context, AppRoutes.customerHome);
                 } else {
-                  Navigator.pushReplacementNamed(context, AppRoutes.customerProfileCompletion);
+                  Navigator.pushReplacementNamed(
+                      context, AppRoutes.customerProfileCompletion);
                 }
               }
               break;
-              
+
             case 'vendor':
-              final isProfileCompleted = await profileService.isVendorProfileCompleted();
+              final isProfileCompleted =
+                  await profileService.isVendorProfileCompleted();
               if (mounted) {
                 if (isProfileCompleted) {
-                  Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
+                  Navigator.pushReplacementNamed(
+                      context, AppRoutes.vendorDashboard);
                 } else {
-                  Navigator.pushReplacementNamed(context, AppRoutes.vendorProfileCompletion);
+                  Navigator.pushReplacementNamed(
+                      context, AppRoutes.vendorProfileCompletion);
                 }
               }
               break;
-              
+
             case 'admin':
               if (mounted) {
-                Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
+                Navigator.pushReplacementNamed(
+                    context, AppRoutes.adminDashboard);
               }
               break;
-              
+
             default:
               if (mounted) {
                 Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
@@ -193,17 +202,16 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   void _navigateToHome(UserModel user) async {
     final profileCompletionService = context.read<ProfileCompletionService>();
     final notificationService = context.read<NotificationService>();
-    
+
     switch (user.role) {
       case 'customer':
         if (await profileCompletionService.shouldShowCustomerProfilePrompt()) {
           _showProfileCompletionDialog(
-            context, 
-            'customer', 
-            profileCompletionService, 
-            notificationService,
-            AppRoutes.customerProfileCompletion
-          );
+              context,
+              'customer',
+              profileCompletionService,
+              notificationService,
+              AppRoutes.customerProfileCompletion);
         } else {
           Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
         }
@@ -211,12 +219,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       case 'vendor':
         if (await profileCompletionService.shouldShowVendorProfilePrompt()) {
           _showProfileCompletionDialog(
-            context, 
-            'vendor', 
-            profileCompletionService, 
-            notificationService,
-            AppRoutes.vendorProfileCompletion
-          );
+              context,
+              'vendor',
+              profileCompletionService,
+              notificationService,
+              AppRoutes.vendorProfileCompletion);
         } else {
           Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
         }
@@ -251,7 +258,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                userType == 'customer' ? 'Complete Your Profile' : 'Complete Your Business Profile',
+                userType == 'customer'
+                    ? 'Complete Your Profile'
+                    : 'Complete Your Business Profile',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -278,7 +287,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   _ProfileItem(
                     icon: Icons.location_on_outlined,
                     title: 'Set Your Location',
-                    description: 'Tell us your district and ward for nearby vendors',
+                    description:
+                        'Tell us your district and ward for nearby vendors',
                   ),
                   SizedBox(height: 8),
                   _ProfileItem(
@@ -295,7 +305,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   _ProfileItem(
                     icon: Icons.business_outlined,
                     title: 'Business Information',
-                    description: 'Complete your business details and service areas',
+                    description:
+                        'Complete your business details and service areas',
                   ),
                   SizedBox(height: 8),
                   _ProfileItem(
@@ -314,10 +325,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 onPressed: () async {
                   if (userType == 'customer') {
                     await profileCompletionService.markCustomerPromptShown();
-                    Navigator.pushReplacementNamed(context, AppRoutes.customerHome);
+                    Navigator.pushReplacementNamed(
+                        context, AppRoutes.customerHome);
                   } else {
                     await profileCompletionService.markVendorPromptShown();
-                    Navigator.pushReplacementNamed(context, AppRoutes.vendorDashboard);
+                    Navigator.pushReplacementNamed(
+                        context, AppRoutes.vendorDashboard);
                   }
                 },
                 child: const Text('Skip for Now'),
@@ -330,12 +343,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   } else {
                     await profileCompletionService.markVendorPromptShown();
                   }
-                  
+
                   Navigator.pushReplacementNamed(context, completionRoute);
-                  
+
                   await notificationService.showSystemNotification(
                     'Profile Completion',
-                    userType == 'customer' 
+                    userType == 'customer'
                         ? 'Please complete your customer profile for better service'
                         : 'Please complete your vendor profile to start receiving orders',
                   );
@@ -343,8 +356,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text('Complete Profile'),
               ),
@@ -359,9 +374,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
     final languageProvider = Provider.of<LanguageProvider>(context);
-    
+
     return Scaffold(
       body: Container(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.blue.shade50, Colors.white],
@@ -371,203 +388,238 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 40),
-                  
-                  // App Logo/Icon
-                  Icon(
-                    Icons.water_drop,
-                    size: 80,
-                    color: Colors.blue.shade600,
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Welcome Title
-                  Text(
-                    'Welcome to Dar Water',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade800,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Login to continue',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
-                  
-                  // Login Form
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
+            physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.only(
+              left: 24.0,
+              right: 24.0,
+              top: 24.0,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24.0,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: IntrinsicHeight(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 20),
+
+                      // App Logo/Icon
+                      Icon(
+                        Icons.water_drop,
+                        size: 60,
+                        color: Colors.blue.shade600,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Welcome Title
+                      Text(
+                        'Welcome to Dar Water',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade800,
                         ),
-                      ],
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          // Email/Phone Field
-                          CustomTextField(
-                            label: 'Email or Phone',
-                            controller: _emailController,
-                            prefixIcon: Icons.email_outlined,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter email or phone';
-                              }
-                              return null;
-                            },
-                          ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          // Password Field
-                          CustomTextField(
-                            label: 'Password',
-                            controller: _passwordController,
-                            isPassword: true,
-                            prefixIcon: Icons.lock_outline,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter password';
-                              }
-                              return null;
-                            },
-                          ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          // Remember Me & Forgot Password
-                          Row(
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Login to continue',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 30),
+
+                      // Login Form
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
                             children: [
-                              Checkbox(
-                                value: _rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rememberMe = value ?? false;
-                                  });
+                              // Email/Phone Field
+                              CustomTextField(
+                                label: 'Email or Phone',
+                                controller: _emailController,
+                                prefixIcon: Icons.email_outlined,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter email or phone';
+                                  }
+                                  return null;
                                 },
                               ),
-                              const Text('Remember me'),
-                              const Spacer(),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pushNamed(context, AppRoutes.forgotPassword);
+
+                              const SizedBox(height: 12),
+
+                              // Password Field
+                              CustomTextField(
+                                label: 'Password',
+                                controller: _passwordController,
+                                isPassword: true,
+                                prefixIcon: Icons.lock_outline,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter password';
+                                  }
+                                  return null;
                                 },
-                                child: Text(
-                                  'Forgot Password?',
-                                  style: TextStyle(color: Colors.blue.shade600),
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // Remember Me & Forgot Password
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _rememberMe = value ?? false;
+                                      });
+                                    },
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  const Text('Remember me',
+                                      style: TextStyle(fontSize: 12)),
+                                  const Spacer(),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pushNamed(
+                                          context, AppRoutes.forgotPassword);
+                                    },
+                                    child: Text(
+                                      'Forgot Password?',
+                                      style: TextStyle(
+                                          color: Colors.blue.shade600,
+                                          fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Login Button
+                              Container(
+                                width: double.infinity,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.blue.shade600,
+                                      Colors.blue.shade800
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.blue.shade200,
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _isLoading || auth.isLoading
+                                      ? null
+                                      : _handleLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                  ),
+                                  child: _isLoading || auth.isLoading
+                                      ? const CircularProgressIndicator(
+                                          color: Colors.white, strokeWidth: 3)
+                                      : const Text('Login',
+                                          style:
+                                              TextStyle(color: Colors.white)),
                                 ),
                               ),
                             ],
                           ),
-                          
-                          const SizedBox(height: 24),
-                          
-                          // Login Button
-                          Container(
-                            width: double.infinity,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.blue.shade600, Colors.blue.shade800],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.blue.shade200,
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Biometric Login
+                      if (_emailController.text.isNotEmpty &&
+                          _passwordController.text.isNotEmpty)
+                        Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: _loginWithBiometric,
+                            icon: Icon(Icons.fingerprint,
+                                color: Colors.grey.shade700, size: 18),
+                            label: Text('Login with Biometric',
+                                style: TextStyle(
+                                    color: Colors.grey.shade700, fontSize: 12)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
                             ),
-                            child: ElevatedButton(
-                              onPressed: _isLoading || auth.isLoading 
-                                  ? null 
-                                  : _handleLogin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
+                          ),
+                        ),
+
+                      const SizedBox(height: 20),
+
+                      // Sign Up Link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account?",
+                            style: TextStyle(
+                                color: Colors.grey.shade600, fontSize: 12),
+                          ),
+                          const SizedBox(width: 6),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                  context, AppRoutes.roleSelection);
+                            },
+                            child: Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                color: Colors.blue.shade600,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
                               ),
-                              child: _isLoading || auth.isLoading
-                                  ? const CircularProgressIndicator(color: Colors.white)
-                                  : const Text('Login', style: TextStyle(color: Colors.white)),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 30),
-                  
-                  // Biometric Login
-                  if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty)
-                    Container(
-                      width: double.infinity,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: ElevatedButton.icon(
-                        onPressed: _loginWithBiometric,
-                        icon: Icon(Icons.fingerprint, color: Colors.grey.shade700),
-                        label: Text('Login with Biometric', style: TextStyle(color: Colors.grey.shade700)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                        ),
-                      ),
-                    ),
-                  
-                  const SizedBox(height: 30),
-                  
-                  // Sign Up Link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account?",
-                        style: TextStyle(color: Colors.grey.shade600),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, AppRoutes.roleSelection);
-                        },
-                        child: Text(
-                          'Sign Up',
-                          style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      const Spacer(),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -632,7 +684,10 @@ class _ProfileItem extends StatelessWidget {
                 description,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                 ),
               ),
             ],

@@ -3,7 +3,6 @@ import '../services/vendor_service.dart';
 import '../services/earnings_service.dart';
 import '../../customer/models/order_model.dart';
 import '../../auth/controllers/auth_controller.dart';
-import '../../../config/supabase/supabase_client.dart';
 
 class VendorDashboardController extends ChangeNotifier {
   final VendorService _vendorService = VendorService();

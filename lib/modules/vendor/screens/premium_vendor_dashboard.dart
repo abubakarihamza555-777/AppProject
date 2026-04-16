@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/bottom_nav_bar.dart';
-import '../../../shared/widgets/notification_icon.dart';
 import '../../../localization/language_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../controllers/vendor_dashboard_controller.dart';
-import '../../../shared/widgets/notification_screen.dart' as notification_screen;
+import '../../../shared/widgets/notification_screen.dart'
+    as notification_screen;
+import '../../../config/routes/app_routes.dart';
+import '../../auth/controllers/auth_controller.dart';
 import 'incoming_orders_screen.dart';
 import 'active_deliveries_screen.dart';
 import 'earnings_screen.dart';
@@ -40,7 +41,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -48,10 +49,10 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
       parent: _fadeController,
       curve: Curves.easeInOut,
     ));
-    
+
     _animationController.forward();
     _fadeController.forward();
-    
+
     _loadData();
   }
 
@@ -76,9 +77,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: themeProvider.isDarkMode 
-            ? [Colors.green.shade800, Colors.green.shade900]
-            : [Colors.green.shade600, Colors.green.shade800],
+          colors: themeProvider.isDarkMode
+              ? [Colors.green.shade800, Colors.green.shade900]
+              : [Colors.green.shade600, Colors.green.shade800],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -89,9 +90,10 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -102,11 +104,11 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          languageProvider.currentLocale.languageCode == 'sw' 
-                            ? 'Karibu, Mtoa Huduma' 
-                            : 'Welcome, Vendor',
+                          languageProvider.currentLocale.languageCode == 'sw'
+                              ? 'Karibu, Mtoa Huduma'
+                              : 'Welcome, Vendor',
                           style: GoogleFonts.poppins(
-                            fontSize: 24,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -117,14 +119,17 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                             Icon(
                               Icons.store,
                               color: Colors.white.withValues(alpha: 0.8),
-                              size: 16,
+                              size: 14,
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              'Quick Water Delivery',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.white.withValues(alpha: 0.8),
+                            Expanded(
+                              child: Text(
+                                'Quick Water Delivery',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -134,63 +139,110 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                   ),
                   // Action buttons
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // Theme toggle
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: IconButton(
                           onPressed: () {
                             context.read<ThemeProvider>().toggleTheme();
                           },
                           icon: Icon(
-                            themeProvider.isDarkMode 
-                              ? Icons.light_mode 
-                              : Icons.dark_mode,
+                            themeProvider.isDarkMode
+                                ? Icons.light_mode
+                                : Icons.dark_mode,
                             color: Colors.white,
+                            size: 20,
                           ),
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          padding: EdgeInsets.zero,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       // Language toggle
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: IconButton(
-                          onPressed: () => _showLanguageDialog(context, languageProvider),
-                          icon: const Icon(Icons.language, color: Colors.white),
+                          onPressed: () =>
+                              _showLanguageDialog(context, languageProvider),
+                          icon: const Icon(Icons.language,
+                              color: Colors.white, size: 20),
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          padding: EdgeInsets.zero,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       // Notifications
-                      NotificationIcon(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const notification_screen.NotificationScreen(),
-                            ),
-                          );
-                        },
-                        color: Colors.white,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const notification_screen
+                                    .NotificationScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.notifications,
+                              color: Colors.white, size: 20),
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      // Logout button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: IconButton(
+                          onPressed: () =>
+                              _showLogoutDialog(context, languageProvider),
+                          icon: const Icon(Icons.logout,
+                              color: Colors.white, size: 20),
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              
+              const SizedBox(height: 16),
+
               // Quick stats
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -198,31 +250,31 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                       child: _buildStatCard(
                         Icons.pending_actions,
                         controller.incomingOrdersCount.toString(),
-                        languageProvider.currentLocale.languageCode == 'sw' 
-                          ? 'Oda Zilizosubiri' 
-                          : 'Pending Orders',
+                        languageProvider.currentLocale.languageCode == 'sw'
+                            ? 'Oda Zilizosubiri'
+                            : 'Pending Orders',
                         Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: _buildStatCard(
                         Icons.local_shipping,
                         controller.activeDeliveriesCount.toString(),
-                        languageProvider.currentLocale.languageCode == 'sw' 
-                          ? 'Usafirishaji Unaoendelea' 
-                          : 'Active Deliveries',
+                        languageProvider.currentLocale.languageCode == 'sw'
+                            ? 'Usafirishaji Unaoendelea'
+                            : 'Active Deliveries',
                         Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: _buildStatCard(
                         Icons.attach_money,
                         'TSh ${controller.todayEarnings.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                        languageProvider.currentLocale.languageCode == 'sw' 
-                          ? 'Mapato Leo' 
-                          : 'Today Earnings',
+                        languageProvider.currentLocale.languageCode == 'sw'
+                            ? 'Mapato Leo'
+                            : 'Today Earnings',
                         Colors.white,
                       ),
                     ),
@@ -236,21 +288,22 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     );
   }
 
-  Widget _buildStatCard(IconData icon, String value, String label, Color color) {
+  Widget _buildStatCard(
+      IconData icon, String value, String label, Color color) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 4),
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 2),
           Text(
             value,
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -258,10 +311,12 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
           Text(
             label,
             style: GoogleFonts.poppins(
-              fontSize: 10,
+              fontSize: 8,
               color: color.withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -289,9 +344,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              languageProvider.currentLocale.languageCode == 'sw' 
-                ? 'Vitendo Haraka' 
-                : 'Quick Actions',
+              languageProvider.currentLocale.languageCode == 'sw'
+                  ? 'Vitendo Haraka'
+                  : 'Quick Actions',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -304,9 +359,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 Expanded(
                   child: _buildQuickActionCard(
                     Icons.list_alt,
-                    languageProvider.currentLocale.languageCode == 'sw' 
-                      ? 'Oda Mpya' 
-                      : 'New Orders',
+                    languageProvider.currentLocale.languageCode == 'sw'
+                        ? 'Oda Mpya'
+                        : 'New Orders',
                     Colors.orange,
                     () {
                       Navigator.push(
@@ -322,9 +377,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 Expanded(
                   child: _buildQuickActionCard(
                     Icons.delivery_dining,
-                    languageProvider.currentLocale.languageCode == 'sw' 
-                      ? 'Uwasilishaji' 
-                      : 'Deliveries',
+                    languageProvider.currentLocale.languageCode == 'sw'
+                        ? 'Uwasilishaji'
+                        : 'Deliveries',
                     Colors.blue,
                     () {
                       Navigator.push(
@@ -340,9 +395,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 Expanded(
                   child: _buildQuickActionCard(
                     Icons.bar_chart,
-                    languageProvider.currentLocale.languageCode == 'sw' 
-                      ? 'Mapato' 
-                      : 'Earnings',
+                    languageProvider.currentLocale.languageCode == 'sw'
+                        ? 'Mapato'
+                        : 'Earnings',
                     Colors.green,
                     () {
                       Navigator.push(
@@ -362,7 +417,8 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     );
   }
 
-  Widget _buildQuickActionCard(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildQuickActionCard(
+      IconData icon, String label, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -422,9 +478,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              languageProvider.currentLocale.languageCode == 'sw' 
-                ? 'Mapato ya Wiki 7' 
-                : 'Weekly Earnings',
+              languageProvider.currentLocale.languageCode == 'sw'
+                  ? 'Mapato ya Wiki 7'
+                  : 'Weekly Earnings',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -438,26 +494,35 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                   Icon(
                     Icons.bar_chart,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    languageProvider.currentLocale.languageCode == 'sw' 
-                      ? 'Bado hakuna data ya mapato' 
-                      : 'No earnings data available',
+                    languageProvider.currentLocale.languageCode == 'sw'
+                        ? 'Bado hakuna data ya mapato'
+                        : 'No earnings data available',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    languageProvider.currentLocale.languageCode == 'sw' 
-                      ? 'Anza kupokea oda kuona mapato yako' 
-                      : 'Start receiving orders to see your earnings',
+                    languageProvider.currentLocale.languageCode == 'sw'
+                        ? 'Anza kupokea oda kuona mapato yako'
+                        : 'Start receiving orders to see your earnings',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.4),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -494,9 +559,9 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  languageProvider.currentLocale.languageCode == 'sw' 
-                    ? 'Oda Mpya' 
-                    : 'New Orders',
+                  languageProvider.currentLocale.languageCode == 'sw'
+                      ? 'Oda Mpya'
+                      : 'New Orders',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -514,16 +579,16 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                   },
                   icon: const Icon(Icons.arrow_forward, size: 16),
                   label: Text(
-                    languageProvider.currentLocale.languageCode == 'sw' 
-                      ? 'Ona Zote' 
-                      : 'View All',
+                    languageProvider.currentLocale.languageCode == 'sw'
+                        ? 'Ona Zote'
+                        : 'View All',
                     style: GoogleFonts.poppins(fontSize: 12),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Empty state for orders
             Center(
               child: Column(
@@ -531,26 +596,35 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                   Icon(
                     Icons.inbox_outlined,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    languageProvider.currentLocale.languageCode == 'sw' 
-                      ? 'Hakuna oda mpya' 
-                      : 'No new orders',
+                    languageProvider.currentLocale.languageCode == 'sw'
+                        ? 'Hakuna oda mpya'
+                        : 'No new orders',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    languageProvider.currentLocale.languageCode == 'sw' 
-                      ? 'Oda zako zitataonekapa hapa' 
-                      : 'Your new orders will appear here',
+                    languageProvider.currentLocale.languageCode == 'sw'
+                        ? 'Oda zako zitataonekapa hapa'
+                        : 'Your new orders will appear here',
                     style: GoogleFonts.poppins(
                       fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.4),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -563,16 +637,15 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     );
   }
 
-
   void _showLanguageDialog(BuildContext context, LanguageProvider provider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          provider.currentLocale.languageCode == 'sw' 
-            ? 'Chagua Lugha' 
-            : 'Select Language',
+          provider.currentLocale.languageCode == 'sw'
+              ? 'Chagua Lugha'
+              : 'Select Language',
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         content: Column(
@@ -600,6 +673,61 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     );
   }
 
+  void _showLogoutDialog(
+      BuildContext context, LanguageProvider languageProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          languageProvider.currentLocale.languageCode == 'sw'
+              ? 'Toka Akaunti'
+              : 'Logout',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          languageProvider.currentLocale.languageCode == 'sw'
+              ? 'Una uhakika unataka kutoka kwenye akaunti yako?'
+              : 'Are you sure you want to logout from your account?',
+          style: GoogleFonts.poppins(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              languageProvider.currentLocale.languageCode == 'sw'
+                  ? 'Ghairi'
+                  : 'Cancel',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final authController = context.read<AuthController>();
+              await authController.signOut();
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, AppRoutes.login);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(
+              languageProvider.currentLocale.languageCode == 'sw'
+                  ? 'Toka'
+                  : 'Logout',
+              style: GoogleFonts.poppins(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
@@ -607,24 +735,40 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      backgroundColor: themeProvider.isDarkMode 
-        ? const Color(0xFF000000)
-        : const Color(0xFFF5F5F5),
+      backgroundColor: themeProvider.isDarkMode
+          ? const Color(0xFF000000)
+          : const Color(0xFFF5F5F5),
       body: controller.isLoading
           ? const LoadingIndicator()
           : RefreshIndicator(
               onRefresh: _loadData,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildPremiumHeader(controller, languageProvider, themeProvider),
-                    const SizedBox(height: 12),
-                    _buildQuickActions(languageProvider),
-                    _buildEarningsChart(languageProvider),
-                    _buildRecentOrders(languageProvider),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+              child: CustomScrollView(
+                slivers: [
+                  // Sticky green header
+                  SliverAppBar(
+                    expandedHeight: 280,
+                    floating: false,
+                    pinned: true,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: _buildPremiumHeader(
+                          controller, languageProvider, themeProvider),
+                    ),
+                  ),
+                  // Scrollable white content
+                  SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        _buildQuickActions(languageProvider),
+                        _buildEarningsChart(languageProvider),
+                        _buildRecentOrders(languageProvider),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
       bottomNavigationBar: BottomNavBar(

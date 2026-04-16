@@ -9,7 +9,6 @@ import '../../../shared/services/profile_completion_service.dart';
 import '../../shared/services/location_service.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../controllers/vendor_profile_controller.dart';
-import '../models/vendor_model.dart';
 
 class VendorProfileCompletionScreen extends StatefulWidget {
   const VendorProfileCompletionScreen({super.key});
