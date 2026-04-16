@@ -12,6 +12,7 @@ import 'modules/customer/controllers/home_controller.dart';
 import 'modules/customer/controllers/order_controller.dart';
 import 'modules/vendor/controllers/vendor_profile_controller.dart';
 import 'modules/vendor/controllers/vendor_dashboard_controller.dart';
+import 'modules/vendor/controllers/vendor_order_controller.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/services/profile_completion_service.dart';
 
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderController()),
         ChangeNotifierProvider(create: (_) => VendorProfileController()),
         ChangeNotifierProvider(create: (_) => VendorDashboardController()),
+        ChangeNotifierProvider(create: (_) => VendorOrderController()),
         ChangeNotifierProvider(create: (_) => NotificationService()),
         ChangeNotifierProvider(create: (_) => ProfileCompletionService()),
       ],

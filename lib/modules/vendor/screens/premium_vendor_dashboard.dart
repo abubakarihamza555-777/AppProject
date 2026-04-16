@@ -9,6 +9,11 @@ import '../../../localization/language_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../controllers/vendor_dashboard_controller.dart';
 import '../../../shared/widgets/notification_screen.dart' as notification_screen;
+import 'incoming_orders_screen.dart';
+import 'active_deliveries_screen.dart';
+import 'earnings_screen.dart';
+import 'vendor_profile_screen.dart';
+import '../../customer/screens/order_history_screen.dart';
 
 class PremiumVendorDashboard extends StatefulWidget {
   const PremiumVendorDashboard({super.key});
@@ -199,7 +204,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                         Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _buildStatCard(
                         Icons.local_shipping,
@@ -210,7 +215,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                         Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _buildStatCard(
                         Icons.attach_money,
@@ -267,8 +272,8 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
@@ -293,7 +298,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -304,11 +309,16 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                       : 'New Orders',
                     Colors.orange,
                     () {
-                      // Navigate to new orders
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const IncomingOrdersScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildQuickActionCard(
                     Icons.delivery_dining,
@@ -317,11 +327,16 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                       : 'Deliveries',
                     Colors.blue,
                     () {
-                      // Navigate to deliveries
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ActiveDeliveriesScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildQuickActionCard(
                     Icons.bar_chart,
@@ -330,7 +345,12 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                       : 'Earnings',
                     Colors.green,
                     () {
-                      // Navigate to earnings
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EarningsScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -345,33 +365,35 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
   Widget _buildQuickActionCard(IconData icon, String label, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               label,
               style: GoogleFonts.poppins(
-                fontSize: 12,
+                fontSize: 10,
                 fontWeight: FontWeight.w500,
                 color: color,
               ),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -383,8 +405,8 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
@@ -409,79 +431,37 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            'TSh${value.toInt()}k',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                          final swDays = ['Jt', 'Jn', 'Jn', 'Al', 'Ij', 'Jm', 'Jp'];
-                          return Text(
-                            languageProvider.currentLocale.languageCode == 'sw' 
-                              ? swDays[value.toInt() % 7] 
-                              : days[value.toInt() % 7],
-                            style: GoogleFonts.poppins(
-                              fontSize: 10,
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            const SizedBox(height: 12),
+            Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.bar_chart,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: [
-                        const FlSpot(0, 30),
-                        const FlSpot(1, 45),
-                        const FlSpot(2, 35),
-                        const FlSpot(3, 50),
-                        const FlSpot(4, 40),
-                        const FlSpot(5, 55),
-                        const FlSpot(6, 48),
-                      ],
-                      isCurved: true,
-                      gradient: LinearGradient(
-                        colors: [Colors.green.shade400, Colors.green.shade600],
-                      ),
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.green.withValues(alpha: 0.2),
-                            Colors.green.withValues(alpha: 0.1),
-                          ],
-                        ),
-                      ),
+                  const SizedBox(height: 8),
+                  Text(
+                    languageProvider.currentLocale.languageCode == 'sw' 
+                      ? 'Bado hakuna data ya mapato' 
+                      : 'No earnings data available',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    languageProvider.currentLocale.languageCode == 'sw' 
+                      ? 'Anza kupokea oda kuona mapato yako' 
+                      : 'Start receiving orders to see your earnings',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
           ],
@@ -494,8 +474,8 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
@@ -525,7 +505,12 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 ),
                 TextButton.icon(
                   onPressed: () {
-                    // Navigate to all orders
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const IncomingOrdersScreen(),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.arrow_forward, size: 16),
                   label: Text(
@@ -537,34 +522,40 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             
-            // Mock order items
-            _buildOrderItem(
-              'John Doe',
-              '500 L',
-              'TSh 50,000',
-              'Kariakoo, Ilala',
-              Colors.orange,
-              languageProvider,
-            ),
-            const SizedBox(height: 12),
-            _buildOrderItem(
-              'Jane Smith',
-              '1000 L',
-              'TSh 100,000',
-              'Temeke, Dar es Salaam',
-              Colors.blue,
-              languageProvider,
-            ),
-            const SizedBox(height: 12),
-            _buildOrderItem(
-              'Mike Johnson',
-              '200 L',
-              'TSh 20,000',
-              'Upanga, Ilala',
-              Colors.green,
-              languageProvider,
+            // Empty state for orders
+            Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.inbox_outlined,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    languageProvider.currentLocale.languageCode == 'sw' 
+                      ? 'Hakuna oda mpya' 
+                      : 'No new orders',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    languageProvider.currentLocale.languageCode == 'sw' 
+                      ? 'Oda zako zitataonekapa hapa' 
+                      : 'Your new orders will appear here',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -572,105 +563,6 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     );
   }
 
-  Widget _buildOrderItem(
-    String customerName,
-    String quantity,
-    String price,
-    String location,
-    Color statusColor,
-    LanguageProvider languageProvider,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Customer avatar
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: statusColor.withValues(alpha: 0.1),
-            child: Icon(
-              Icons.person,
-              color: statusColor,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
-          
-          // Order details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  customerName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$quantity • $price',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 12,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
-                    const SizedBox(width: 2),
-                    Expanded(
-                      child: Text(
-                        location,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          // Action button
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              languageProvider.currentLocale.languageCode == 'sw' 
-                ? 'Kubali' 
-                : 'Accept',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: statusColor,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showLanguageDialog(BuildContext context, LanguageProvider provider) {
     showDialog(
@@ -726,11 +618,11 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 child: Column(
                   children: [
                     _buildPremiumHeader(controller, languageProvider, themeProvider),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
                     _buildQuickActions(languageProvider),
                     _buildEarningsChart(languageProvider),
                     _buildRecentOrders(languageProvider),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -746,10 +638,20 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
               // Already on dashboard
               break;
             case 1:
-              // Navigate to orders
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OrderHistoryScreen(),
+                ),
+              );
               break;
             case 2:
-              // Navigate to earnings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const VendorProfileScreen(),
+                ),
+              );
               break;
           }
         },
