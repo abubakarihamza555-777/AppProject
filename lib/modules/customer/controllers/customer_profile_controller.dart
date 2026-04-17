@@ -81,7 +81,7 @@ class CustomerProfileController extends ChangeNotifier {
       }
       
       // Build full address
-      String fullAddress = '$streetName';
+      String fullAddress = streetName;
       if (houseNumber.isNotEmpty) fullAddress += ', House $houseNumber';
       if (landmark != null && landmark.isNotEmpty) fullAddress += ' (Near $landmark)';
       

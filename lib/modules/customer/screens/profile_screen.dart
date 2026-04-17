@@ -7,7 +7,6 @@ import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../localization/language_provider.dart';
 import '../../../core/extensions/string_extensions.dart';
-import '../../auth/controllers/auth_controller.dart';
 import '../controllers/customer_profile_controller.dart';
 import '../../../shared/services/location_service.dart';
 
@@ -432,7 +431,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(isSwahili ? 'Wilaya' : 'District', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
         const SizedBox(height: 4),
         DropdownButtonFormField<int>(
-          value: _selectedDistrictId,
+          initialValue: _selectedDistrictId,
           isExpanded: true,
           decoration: InputDecoration(
             hintText: isSwahili ? 'Chagua Wilaya' : 'Select District',
@@ -462,7 +461,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(isSwahili ? 'Kata' : 'Ward', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
         const SizedBox(height: 4),
         DropdownButtonFormField<int>(
-          value: _selectedWardId,
+          initialValue: _selectedWardId,
           isExpanded: true,
           decoration: InputDecoration(
             hintText: isSwahili ? 'Chagua Kata' : 'Select Ward',
