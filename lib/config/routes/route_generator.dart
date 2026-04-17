@@ -9,7 +9,7 @@ import '../../modules/auth/screens/vendor_registration_screen.dart';
 import '../../modules/auth/screens/forgot_password_screen.dart';
 import '../../modules/auth/screens/registration_success_screen.dart';
 import '../../modules/customer/screens/premium_home_screen.dart';
-import '../../modules/customer/screens/modern_order_screen.dart';
+import '../../modules/customer/screens/simple_order_screen.dart';
 import '../../modules/customer/screens/premium_order_tracking_screen.dart';
 import '../../modules/customer/screens/payment_screen.dart';
 import '../../modules/customer/screens/order_history_screen.dart';
@@ -68,7 +68,7 @@ class RouteGenerator {
       case AppRoutes.customerHome:
         return MaterialPageRoute(builder: (_) => const PremiumHomeScreen());
       case AppRoutes.requestWater:
-        return MaterialPageRoute(builder: (_) => const ModernOrderScreen());
+        return MaterialPageRoute(builder: (_) => const SimpleOrderScreen());
       case AppRoutes.orderTracking:
         return MaterialPageRoute(builder: (_) => const PremiumOrderTrackingScreen());
       case AppRoutes.payment:

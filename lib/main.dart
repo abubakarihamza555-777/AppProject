@@ -10,6 +10,7 @@ import 'core/theme/theme_provider.dart';
 import 'modules/auth/controllers/auth_controller.dart';
 import 'modules/customer/controllers/home_controller.dart';
 import 'modules/customer/controllers/order_controller.dart';
+import 'modules/customer/controllers/customer_profile_controller.dart';
 import 'modules/vendor/controllers/vendor_profile_controller.dart';
 import 'modules/vendor/controllers/vendor_dashboard_controller.dart';
 import 'modules/vendor/controllers/vendor_order_controller.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthController()),
         ChangeNotifierProvider(create: (_) => HomeController()),
         ChangeNotifierProvider(create: (_) => OrderController()),
+        ChangeNotifierProvider(create: (_) => CustomerProfileController()),
         ChangeNotifierProvider(create: (_) => VendorProfileController()),
         ChangeNotifierProvider(create: (_) => VendorDashboardController()),
         ChangeNotifierProvider(create: (_) => VendorOrderController()),
