@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/order_model.dart';
+import '../services/order_service.dart';
 import '../../vendor/services/vendor_service.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 class HomeController extends ChangeNotifier {
   String userName = 'Customer';
@@ -14,7 +16,7 @@ class HomeController extends ChangeNotifier {
   String? customerDistrictName;
   static const int pricePerLiter = 100; // 1L = 100 TZS
   static const double adminCommissionPercentage = 0.10; // 10% admin commission
-  
+
   final VendorService _vendorService = VendorService();
 
   Future<void> loadDeliveryServices() async {
@@ -54,19 +56,29 @@ class HomeController extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    
-    recentOrders = [];
-    isLoading = false;
-    notifyListeners();
+    try {
+      final authController = AuthController();
+      await authController.initialize();
+      final userId = authController.currentUser?.id;
+
+      if (userId != null) {
+        final orderService = OrderService();
+        recentOrders = await orderService.getCustomerOrders(userId);
+      }
+    } catch (e) {
+      print('Error loading recent orders: $e');
+      recentOrders = [];
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   // Load vendors based on customer location
   Future<void> loadVendorsByLocation({int? districtId, int? wardId}) async {
     customerDistrictId = districtId;
     customerWardId = wardId;
-    
+
     // Set district name from districts list
     if (districtId != null) {
       final district = districts.firstWhere(
@@ -75,36 +87,38 @@ class HomeController extends ChangeNotifier {
       );
       customerDistrictName = district['name'] as String?;
     }
-    
+
     isLoadingVendors = true;
     notifyListeners();
-    
+
     try {
       // Fetch real vendors from database
       final vendors = await _vendorService.getAllVendors();
-      
+
       // Convert vendor models to maps for UI compatibility and filter by active/verified
       availableVendors = vendors
           .where((vendor) => vendor.isActive && vendor.isVerified)
           .map((vendor) => {
-            'id': vendor.id,
-            'business_name': vendor.businessName,
-            'users': {
-              'full_name': vendor.businessName, // Use business name as display name
-              'phone': vendor.businessPhone,
-              'profile_image': vendor.profileImage,
-            },
-            'rating': vendor.rating,
-            'total_deliveries': vendor.totalDeliveries,
-            'business_address': vendor.businessAddress,
-            'service_areas': [], // TODO: Add service areas to vendor model
-            'vehicle_type': 'medium_truck', // Default vehicle type
-            'min_capacity': 3000, // Default capacity
-            'max_capacity': 5000, // Default capacity
-            'is_active': vendor.isActive,
-            'is_verified': vendor.isVerified,
-          }).toList();
-      
+                'id': vendor.id,
+                'business_name': vendor.businessName,
+                'users': {
+                  'full_name':
+                      vendor.businessName, // Use business name as display name
+                  'phone': vendor.businessPhone,
+                  'profile_image': vendor.profileImage,
+                },
+                'rating': vendor.rating,
+                'total_deliveries': vendor.totalDeliveries,
+                'business_address': vendor.businessAddress,
+                'service_areas': [], // TODO: Add service areas to vendor model
+                'vehicle_type': 'medium_truck', // Default vehicle type
+                'min_capacity': 3000, // Default capacity
+                'max_capacity': 5000, // Default capacity
+                'is_active': vendor.isActive,
+                'is_verified': vendor.isVerified,
+              })
+          .toList();
+
       // Filter by location if specified (currently all vendors since service_areas not implemented)
       if (districtId != null) {
         // For now, keep all vendors. In future, filter by service_areas
@@ -113,7 +127,6 @@ class HomeController extends ChangeNotifier {
         //   return serviceAreas.contains(districtId);
         // }).toList();
       }
-      
     } catch (e) {
       print('Error loading vendors: $e');
       availableVendors = [];
@@ -124,7 +137,8 @@ class HomeController extends ChangeNotifier {
   }
 
   // Check if vendor can handle the requested quantity
-  bool canVendorHandleQuantity(Map<String, dynamic> vendor, int requiredLiters) {
+  bool canVendorHandleQuantity(
+      Map<String, dynamic> vendor, int requiredLiters) {
     final minCapacity = vendor['min_capacity'] as int? ?? 0;
     final maxCapacity = vendor['max_capacity'] as int? ?? 0;
     return requiredLiters >= minCapacity && requiredLiters <= maxCapacity;
@@ -132,9 +146,9 @@ class HomeController extends ChangeNotifier {
 
   // Get filtered vendors based on quantity requirement
   List<Map<String, dynamic>> getVendorsForQuantity(int requiredLiters) {
-    return availableVendors.where((vendor) => 
-      canVendorHandleQuantity(vendor, requiredLiters)
-    ).toList();
+    return availableVendors
+        .where((vendor) => canVendorHandleQuantity(vendor, requiredLiters))
+        .toList();
   }
 
   // Get vehicle capacity info
@@ -162,13 +176,13 @@ class HomeController extends ChangeNotifier {
     }
     return 'Dar es Salaam'; // Default to city instead of 'Location not set'
   }
-  
+
   // Helper methods for location data
   static const List<Map<String, dynamic>> districts = [
     {'id': 1, 'name': 'Ilala'},
     {'id': 2, 'name': 'Temeke'},
   ];
-  
+
   static const List<Map<String, dynamic>> wards = [
     {'id': 1, 'name': 'Kariakoo'},
     {'id': 2, 'name': 'Upanga'},
@@ -190,7 +204,8 @@ class HomeController extends ChangeNotifier {
 
   // Get vendor earnings (water cost minus admin commission)
   double getVendorEarnings(int liters) {
-    return (liters * pricePerLiter.toDouble()) * (1 - adminCommissionPercentage);
+    return (liters * pricePerLiter.toDouble()) *
+        (1 - adminCommissionPercentage);
   }
 }
 
@@ -224,4 +239,4 @@ class DeliveryService {
     int maxPrice = maxCapacity * HomeController.pricePerLiter;
     return 'TZS ${minPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} - ${maxPrice.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
-} 
+}

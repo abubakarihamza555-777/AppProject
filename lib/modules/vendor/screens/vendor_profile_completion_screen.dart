@@ -28,14 +28,14 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
   String? _selectedVehicleType;
   int _maxLitersPerTrip = 1000;
   List<int> _selectedDistricts = [];
-  List<int> _selectedWards = [];
+  final List<int> _selectedWards = [];
   bool _isLoading = false;
   bool _isSaving = false;
   String? _errorMessage;
   
   // Location data
   List<Map<String, dynamic>> _districts = [];
-  Map<int, List<Map<String, dynamic>>> _wardsCache = {};
+  final Map<int, List<Map<String, dynamic>>> _wardsCache = {};
   
   // Vehicle types
   final List<Map<String, dynamic>> _vehicleTypes = [
@@ -540,8 +540,8 @@ class _VendorProfileCompletionScreenState extends State<VendorProfileCompletionS
             activeColor: Colors.blue,
           ),
           trailing: isSelected 
-              ? Icon(Icons.expand_more, color: Colors.blue)
-              : Icon(Icons.chevron_right, color: Colors.grey),
+              ? const Icon(Icons.expand_more, color: Colors.blue)
+              : const Icon(Icons.chevron_right, color: Colors.grey),
           children: isSelected
               ? [
                   Container(

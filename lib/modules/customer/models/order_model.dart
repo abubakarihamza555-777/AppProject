@@ -14,7 +14,7 @@ class OrderModel {
   final Map<String, dynamic>? vendorDetails;
   final Map<String, dynamic>? customerDetails;
   final String? serviceType; // 'small' or 'large' car tank
-  
+
   OrderModel({
     required this.id,
     required this.customerId,
@@ -32,7 +32,7 @@ class OrderModel {
     this.customerDetails,
     this.serviceType,
   });
-  
+
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['id'] as String,
@@ -45,8 +45,8 @@ class OrderModel {
       paymentMethod: json['payment_method'] as String,
       status: json['status'] as String,
       orderDate: DateTime.parse(json['created_at'] as String),
-      deliveryDate: json['delivery_date'] != null 
-          ? DateTime.parse(json['delivery_date'] as String) 
+      deliveryDate: json['delivery_date'] != null
+          ? DateTime.parse(json['delivery_date'] as String)
           : null,
       trackingNumber: json['tracking_number'] as String?,
       vendorDetails: json['vendors'] as Map<String, dynamic>?,
@@ -54,7 +54,7 @@ class OrderModel {
       serviceType: json['service_type'] as String?,
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -72,11 +72,12 @@ class OrderModel {
       'service_type': serviceType,
     };
   }
-  
+
   String getStatusText(String languageCode) {
     final statusMap = {
       'placed': languageCode == 'sw' ? 'Imewekwa' : 'Placed',
-      'vendor_assigned': languageCode == 'sw' ? 'Mtoa huduma amechaguliwa' : 'Vendor assigned',
+      'vendor_assigned':
+          languageCode == 'sw' ? 'Mtoa huduma amechaguliwa' : 'Vendor assigned',
       'accepted': languageCode == 'sw' ? 'Imekubaliwa' : 'Accepted',
       'preparing': languageCode == 'sw' ? 'Inaandaliwa' : 'Preparing',
       'out_for_delivery': languageCode == 'sw' ? 'Imetoka' : 'Out for delivery',
@@ -100,4 +101,10 @@ class OrderModel {
       }
     ];
   }
-} 
+
+  // Get short order ID for display
+  String get shortId {
+    if (id.length <= 8) return id;
+    return id.substring(0, 8).toUpperCase();
+  }
+}

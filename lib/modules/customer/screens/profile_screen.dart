@@ -23,7 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
-  
+
   // Location selection for editing
   int? _selectedDistrictId;
   int? _selectedWardId;
@@ -31,7 +31,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _houseNumber = '';
   String _landmark = '';
   bool _isTruckAccessible = true;
-  
+  bool _isLoggingOut = false;
+
   List<Map<String, dynamic>> _districts = [];
   List<Map<String, dynamic>> _wards = [];
   bool _isLoadingLocation = false;
@@ -60,18 +61,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _updateControllers() {
     final controller = context.read<CustomerProfileController>();
     final profile = controller.profileData;
-    
+
     _nameController.text = profile['full_name'] ?? '';
     _phoneController.text = profile['phone'] ?? '';
     _addressController.text = profile['address'] ?? '';
-    
+
     _selectedDistrictId = profile['district_id'];
     _selectedWardId = profile['ward_id'];
     _streetName = profile['street_name'] ?? '';
     _houseNumber = profile['house_number'] ?? '';
     _landmark = profile['landmark'] ?? '';
     _isTruckAccessible = profile['is_truck_accessible'] ?? true;
-    
+
     if (_selectedDistrictId != null) {
       _loadWardsForDistrict(_selectedDistrictId!);
     }
@@ -100,16 +101,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final controller = context.read<CustomerProfileController>();
-    
+
     // First save basic info
     final basicSuccess = await controller.updateBasicProfile(
       fullName: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       address: _addressController.text.trim(),
     );
-    
+
     // Then save location details if changed
     if (_selectedDistrictId != null && _selectedWardId != null) {
       await controller.updateCustomerProfile(
@@ -121,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         isTruckAccessible: _isTruckAccessible,
       );
     }
-    
+
     if (basicSuccess && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -135,15 +136,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout() async {
-    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final languageProvider =
+        Provider.of<LanguageProvider>(context, listen: false);
     final isSwahili = languageProvider.currentLocale.languageCode == 'sw';
-    
+
+    // Prevent double execution
+    if (_isLoggingOut) return;
+    _isLoggingOut = true;
+
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(isSwahili ? 'Thibitisha Kutoka' : 'Confirm Logout'),
-        content: Text(isSwahili ? 'Una uhakika unataka kutoka?' : 'Are you sure you want to logout?'),
+        content: Text(isSwahili
+            ? 'Una uhakika unataka kutoka?'
+            : 'Are you sure you want to logout?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -151,17 +159,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(isSwahili ? 'Toka' : 'Logout', style: TextStyle(color: Colors.red)),
+            child: Text(isSwahili ? 'Toka' : 'Logout',
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
-    
+
     if (confirmed == true && mounted) {
       try {
         final authController = context.read<AuthController>();
         await authController.signOut();
-        
+
         // Navigate to login screen
         if (mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil(
@@ -180,6 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     }
+
+    _isLoggingOut = false;
   }
 
   @override
@@ -188,7 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final controller = Provider.of<CustomerProfileController>(context);
     final isSwahili = languageProvider.currentLocale.languageCode == 'sw';
     final profile = controller.profileData;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(isSwahili ? 'Wasifu Wangu' : 'My Profile'),
@@ -223,8 +234,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 24),
                         _buildLocationSection(controller, isSwahili),
                         const SizedBox(height: 24),
-                        if (!controller.isEditing) _buildLogoutSection(isSwahili),
-                        if (controller.isEditing) _buildActionButtons(isSwahili),
+                        if (!controller.isEditing)
+                          _buildLogoutSection(isSwahili),
+                        if (controller.isEditing)
+                          _buildActionButtons(isSwahili),
                       ],
                     ),
                   ),
@@ -241,17 +254,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 16),
           Text(
             isSwahili ? 'Wasifu haujakamilika' : 'Profile not completed',
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
+            style:
+                GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
-            isSwahili ? 'Tafadhali kamilisha wasifu wako' : 'Please complete your profile',
+            isSwahili
+                ? 'Tafadhali kamilisha wasifu wako'
+                : 'Please complete your profile',
             style: GoogleFonts.poppins(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
-              Navigator.pushReplacementNamed(context, AppRoutes.customerProfileCompletion);
+              Navigator.pushReplacementNamed(
+                  context, AppRoutes.customerProfileCompletion);
             },
             child: Text(isSwahili ? 'Kamilisha Wasifu' : 'Complete Profile'),
           ),
@@ -260,7 +277,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(CustomerProfileController controller, bool isSwahili) {
+  Widget _buildProfileHeader(
+      CustomerProfileController controller, bool isSwahili) {
     return Center(
       child: Stack(
         children: [
@@ -295,14 +313,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildBasicInfoSection(CustomerProfileController controller, bool isSwahili) {
+  Widget _buildBasicInfoSection(
+      CustomerProfileController controller, bool isSwahili) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
         ],
       ),
       child: Column(
@@ -310,7 +330,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             isSwahili ? 'Taarifa za Msingi' : 'Basic Information',
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+            style:
+                GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           CustomTextField(
@@ -319,7 +340,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             readOnly: !controller.isEditing,
             prefixIcon: Icons.person_outline,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your name';
+              if (value == null || value.isEmpty) {
+                return 'Please enter your name';
+              }
               return null;
             },
           ),
@@ -331,7 +354,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             isPhone: true,
             prefixIcon: Icons.phone_outlined,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter phone number';
+              if (value == null || value.isEmpty) {
+                return 'Please enter phone number';
+              }
               return null;
             },
           ),
@@ -342,7 +367,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: InputDecoration(
               labelText: isSwahili ? 'Barua pepe' : 'Email',
               prefixIcon: const Icon(Icons.email_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
               fillColor: Colors.grey.shade50,
             ),
@@ -352,16 +378,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildLocationSection(CustomerProfileController controller, bool isSwahili) {
-    final hasLocation = controller.districtId != null && controller.wardId != null;
-    
+  Widget _buildLocationSection(
+      CustomerProfileController controller, bool isSwahili) {
+    final hasLocation =
+        controller.districtId != null && controller.wardId != null;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
         ],
       ),
       child: Column(
@@ -372,19 +401,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 isSwahili ? 'Anwani ya Kufikishia' : 'Delivery Address',
-                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                    fontSize: 18, fontWeight: FontWeight.bold),
               ),
               if (!hasLocation && !controller.isEditing)
                 TextButton(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, AppRoutes.customerProfileCompletion);
+                    Navigator.pushReplacementNamed(
+                        context, AppRoutes.customerProfileCompletion);
                   },
                   child: Text(isSwahili ? 'Ongeza' : 'Add'),
                 ),
             ],
           ),
           const SizedBox(height: 16),
-          
           if (!hasLocation && !controller.isEditing)
             Container(
               padding: const EdgeInsets.all(24),
@@ -394,10 +424,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  Icon(Icons.location_off, size: 48, color: Colors.orange.shade700),
+                  Icon(Icons.location_off,
+                      size: 48, color: Colors.orange.shade700),
                   const SizedBox(height: 8),
                   Text(
-                    isSwahili ? 'Hujatoa anwani yako' : 'No delivery address set',
+                    isSwahili
+                        ? 'Hujatoa anwani yako'
+                        : 'No delivery address set',
                     style: GoogleFonts.poppins(color: Colors.orange.shade700),
                   ),
                 ],
@@ -406,12 +439,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           else if (!controller.isEditing)
             Column(
               children: [
-                _buildReadOnlyLocationTile(Icons.location_city, 'District', _getDistrictName()),
+                _buildReadOnlyLocationTile(
+                    Icons.location_city, 'District', _getDistrictName()),
                 _buildReadOnlyLocationTile(Icons.place, 'Ward', _getWardName()),
-                _buildReadOnlyLocationTile(Icons.streetview, 'Street', controller.streetName),
-                _buildReadOnlyLocationTile(Icons.home, 'House', controller.houseNumber),
+                _buildReadOnlyLocationTile(
+                    Icons.streetview, 'Street', controller.streetName),
+                _buildReadOnlyLocationTile(
+                    Icons.home, 'House', controller.houseNumber),
                 if (controller.landmark.isNotEmpty)
-                  _buildReadOnlyLocationTile(Icons.flag, 'Landmark', controller.landmark),
+                  _buildReadOnlyLocationTile(
+                      Icons.flag, 'Landmark', controller.landmark),
                 _buildReadOnlyLocationTile(
                   Icons.local_shipping,
                   'Truck Access',
@@ -470,8 +507,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade600)),
-                Text(value.isNotEmpty ? value : 'Not set', style: GoogleFonts.poppins(fontSize: 14)),
+                Text(label,
+                    style: GoogleFonts.poppins(
+                        fontSize: 12, color: Colors.grey.shade600)),
+                Text(value.isNotEmpty ? value : 'Not set',
+                    style: GoogleFonts.poppins(fontSize: 14)),
               ],
             ),
           ),
@@ -484,7 +524,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(isSwahili ? 'Wilaya' : 'District', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
+        Text(isSwahili ? 'Wilaya' : 'District',
+            style:
+                GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
         const SizedBox(height: 4),
         DropdownButtonFormField<int>(
           initialValue: _selectedDistrictId,
@@ -492,10 +534,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           decoration: InputDecoration(
             hintText: isSwahili ? 'Chagua Wilaya' : 'Select District',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
           items: _districts.map((d) {
-            return DropdownMenuItem(value: d['id'] as int, child: Text(d['name']));
+            return DropdownMenuItem(
+                value: d['id'] as int, child: Text(d['name']));
           }).toList(),
           onChanged: (value) async {
             setState(() {
@@ -514,7 +558,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(isSwahili ? 'Kata' : 'Ward', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
+        Text(isSwahili ? 'Kata' : 'Ward',
+            style:
+                GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
         const SizedBox(height: 4),
         DropdownButtonFormField<int>(
           initialValue: _selectedWardId,
@@ -522,10 +568,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           decoration: InputDecoration(
             hintText: isSwahili ? 'Chagua Kata' : 'Select Ward',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
           items: _wards.map((w) {
-            return DropdownMenuItem(value: w['id'] as int, child: Text(w['name']));
+            return DropdownMenuItem(
+                value: w['id'] as int, child: Text(w['name']));
           }).toList(),
           onChanged: (value) => setState(() => _selectedWardId = value),
         ),
@@ -533,13 +581,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildEditableTextField(String label, String value, Function(String) onChanged) {
+  Widget _buildEditableTextField(
+      String label, String value, Function(String) onChanged) {
     return TextFormField(
       initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
       onChanged: onChanged,
     );
@@ -549,8 +599,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(isSwahili ? 'Ufikiaji wa Lori' : 'Truck Accessibility', 
-             style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
+        Text(isSwahili ? 'Ufikiaji wa Lori' : 'Truck Accessibility',
+            style:
+                GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500)),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -560,10 +611,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: _isTruckAccessible ? Colors.green.shade50 : Colors.grey.shade100,
+                    color: _isTruckAccessible
+                        ? Colors.green.shade50
+                        : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _isTruckAccessible ? Colors.green : Colors.grey.shade300,
+                      color: _isTruckAccessible
+                          ? Colors.green
+                          : Colors.grey.shade300,
                       width: _isTruckAccessible ? 2 : 1,
                     ),
                   ),
@@ -572,7 +627,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       isSwahili ? 'Ndiyo' : 'Yes',
                       style: TextStyle(
                         color: _isTruckAccessible ? Colors.green : Colors.grey,
-                        fontWeight: _isTruckAccessible ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: _isTruckAccessible
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ),
@@ -586,10 +643,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: !_isTruckAccessible ? Colors.red.shade50 : Colors.grey.shade100,
+                    color: !_isTruckAccessible
+                        ? Colors.red.shade50
+                        : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: !_isTruckAccessible ? Colors.red : Colors.grey.shade300,
+                      color: !_isTruckAccessible
+                          ? Colors.red
+                          : Colors.grey.shade300,
                       width: !_isTruckAccessible ? 2 : 1,
                     ),
                   ),
@@ -598,7 +659,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       isSwahili ? 'Hapana' : 'No',
                       style: TextStyle(
                         color: !_isTruckAccessible ? Colors.red : Colors.grey,
-                        fontWeight: !_isTruckAccessible ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: !_isTruckAccessible
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ),
@@ -618,17 +681,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
         ],
       ),
       child: Column(
         children: [
           Text(
             isSwahili ? 'Hatua za Akaunti' : 'Account Actions',
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+            style:
+                GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          Container(
+          SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _logout,
@@ -652,7 +717,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            isSwahili 
+            isSwahili
                 ? 'Ukitoka, utahitaji kuingia tena kufikia huduma zako'
                 : 'After logging out, you will need to sign in again to access your services',
             style: GoogleFonts.poppins(

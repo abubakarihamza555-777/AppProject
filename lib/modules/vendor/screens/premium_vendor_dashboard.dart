@@ -324,6 +324,8 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
   }
 
   Widget _buildQuickActions(LanguageProvider languageProvider) {
+    final controller = Provider.of<VendorDashboardController>(context);
+
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
@@ -359,6 +361,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 Expanded(
                   child: _buildQuickActionCard(
                     Icons.list_alt,
+                    '${controller.incomingOrdersCount}',
                     languageProvider.currentLocale.languageCode == 'sw'
                         ? 'Oda Mpya'
                         : 'New Orders',
@@ -377,6 +380,7 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 Expanded(
                   child: _buildQuickActionCard(
                     Icons.delivery_dining,
+                    '${controller.activeDeliveriesCount}',
                     languageProvider.currentLocale.languageCode == 'sw'
                         ? 'Uwasilishaji'
                         : 'Deliveries',
@@ -395,9 +399,10 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
                 Expanded(
                   child: _buildQuickActionCard(
                     Icons.bar_chart,
+                    'TSh ${controller.todayEarnings.toStringAsFixed(0)}',
                     languageProvider.currentLocale.languageCode == 'sw'
-                        ? 'Mapato'
-                        : 'Earnings',
+                        ? 'Mapato Leo'
+                        : 'Today',
                     Colors.green,
                     () {
                       Navigator.push(
@@ -417,8 +422,8 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
     );
   }
 
-  Widget _buildQuickActionCard(
-      IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildQuickActionCard(IconData icon, String count, String label,
+      Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -441,9 +446,20 @@ class _PremiumVendorDashboardState extends State<PremiumVendorDashboard>
             ),
             const SizedBox(height: 4),
             Text(
+              count,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
               label,
               style: GoogleFonts.poppins(
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: FontWeight.w500,
                 color: color,
               ),

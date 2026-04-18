@@ -299,7 +299,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
                               const SizedBox(width: 12),
                               Text(
                                 isSwahili ? 'Wilaya Yako' : 'Your District',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -308,7 +308,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<int>(
-                            value: _selectedDistrictId,
+                            initialValue: _selectedDistrictId,
                             isExpanded: true,
                             decoration: InputDecoration(
                               hintText: isSwahili ? 'Chagua Wilaya' : 'Select District',
@@ -374,7 +374,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
                               const SizedBox(width: 12),
                               Text(
                                 isSwahili ? 'Kata Yako' : 'Your Ward',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -383,7 +383,7 @@ class _CustomerProfileCompletionScreenState extends State<CustomerProfileComplet
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<int>(
-                            value: _selectedWardId,
+                            initialValue: _selectedWardId,
                             isExpanded: true,
                             decoration: InputDecoration(
                               hintText: isSwahili ? 'Chagua Kata' : 'Select Ward',

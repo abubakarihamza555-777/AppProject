@@ -40,7 +40,7 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
   Map<String, dynamic>? _selectedVendor;
   bool _useAlternativeAddress = false;
   bool _isPlacingOrder = false;
-  String _selectedPaymentMethod = 'cash';
+  final String _selectedPaymentMethod = 'cash';
   String? _customerId;
   bool _isLoadingVendors = true;
   bool _isLoadingProfile = true;
@@ -661,7 +661,7 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                   child: Column(
                     children: [
                       Text(
-                        '${_selectedQuantity.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
+                        _selectedQuantity.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},'),
                         style: GoogleFonts.poppins(
                           fontSize: 48,
                           fontWeight: FontWeight.bold,

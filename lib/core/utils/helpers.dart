@@ -1,4 +1,6 @@
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
 
 class Helpers {
   static String formatPrice(double price) {
@@ -9,23 +11,23 @@ class Helpers {
     );
     return formatter.format(price);
   }
-  
+
   static String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy, HH:mm').format(date);
   }
-  
+
   static String formatDateShort(DateTime date) {
     return DateFormat('dd/MM/yyyy').format(date);
   }
-  
+
   static String formatTime(DateTime date) {
     return DateFormat('HH:mm').format(date);
   }
-  
+
   static String getTimeAgo(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inDays > 365) {
       return '${(difference.inDays / 365).floor()} years ago';
     } else if (difference.inDays > 30) {
@@ -42,7 +44,7 @@ class Helpers {
       return 'Just now';
     }
   }
-  
+
   static String getOrderStatusColor(String status) {
     switch (status) {
       case 'pending':
@@ -64,19 +66,28 @@ class Helpers {
     if (id.isEmpty) return id;
     return id.length <= 8 ? id : id.substring(0, 8).toUpperCase();
   }
-  
+
   static String truncateText(String text, int maxLength) {
     if (text.length <= maxLength) return text;
     return '${text.substring(0, maxLength)}...';
   }
-  
+
   static bool isValidEmail(String email) {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return emailRegex.hasMatch(email);
   }
-  
+
   static bool isValidPhone(String phone) {
     final phoneRegex = RegExp(r'^[0-9]{10,12}$');
     return phoneRegex.hasMatch(phone);
+  }
+
+  static Future<void> makePhoneCall(String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(phoneUri)) {
+      debugPrint('Phone call initiated to: $phoneNumber');
+    } else {
+      debugPrint('Could not launch phone call to: $phoneNumber');
+    }
   }
 }

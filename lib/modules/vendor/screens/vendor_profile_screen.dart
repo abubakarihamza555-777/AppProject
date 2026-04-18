@@ -64,8 +64,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
   String _formatServiceAreas(List<int> serviceAreas) {
     if (serviceAreas.isEmpty) return 'No service areas selected';
-    
-    // Map district IDs to names (you can expand this)
+
+    // Map district IDs to names
     final districtNames = {
       1: 'Ilala',
       2: 'Temeke',
@@ -73,8 +73,9 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       4: 'Ubungo',
       5: 'Kigamboni',
     };
-    
-    final names = serviceAreas.map((id) => districtNames[id] ?? 'District $id').toList();
+
+    final names =
+        serviceAreas.map((id) => districtNames[id] ?? 'District $id').toList();
     return names.join(', ');
   }
 
@@ -98,7 +99,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(controller.errorMessage ?? 'Failed to update profile'),
+            content:
+                Text(controller.errorMessage ?? 'Failed to update profile'),
             backgroundColor: Colors.red,
           ),
         );
@@ -131,7 +133,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.store_outlined, size: 64, color: Colors.grey.shade400),
+                      Icon(Icons.store_outlined,
+                          size: 64, color: Colors.grey.shade400),
                       const SizedBox(height: 16),
                       Text(
                         'Vendor profile not found',
@@ -171,16 +174,20 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                                   bottom: 0,
                                   right: 0,
                                   child: CircleAvatar(
-                                    backgroundColor: Theme.of(context).primaryColor,
+                                    backgroundColor:
+                                        Theme.of(context).primaryColor,
                                     radius: 18,
                                     child: IconButton(
-                                      icon: const Icon(Icons.camera_alt, size: 16),
+                                      icon: const Icon(Icons.camera_alt,
+                                          size: 16),
                                       color: Colors.white,
                                       onPressed: () {
                                         // TODO: Implement profile picture upload
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
                                           const SnackBar(
-                                            content: Text('Profile picture upload coming soon'),
+                                            content: Text(
+                                                'Profile picture upload coming soon'),
                                             duration: Duration(seconds: 2),
                                           ),
                                         );
@@ -240,44 +247,10 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Business License (Read-only from profile completion)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.document_scanner, color: Colors.grey),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Business License',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    Text(
-                                      profile.businessLicense ?? 'Not provided',
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
                         // Vehicle Type (Read-only from profile completion)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade50,
                             borderRadius: BorderRadius.circular(12),
@@ -285,7 +258,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.directions_car, color: Colors.grey),
+                              const Icon(Icons.directions_car,
+                                  color: Colors.grey),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -312,7 +286,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
                         // Max Liters Per Trip (Read-only from profile completion)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade50,
                             borderRadius: BorderRadius.circular(12),
@@ -347,7 +322,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
                         // Service Areas (Read-only from profile completion)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade50,
                             borderRadius: BorderRadius.circular(12),
@@ -356,7 +332,8 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.location_city, color: Colors.grey),
+                              const Icon(Icons.location_city,
+                                  color: Colors.grey),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -383,27 +360,28 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
                         // Verification Status (Read-only from profile completion)
                         Card(
-                          color: profile.isVerified 
-                              ? Colors.green.shade50 
+                          color: profile.isVerified
+                              ? Colors.green.shade50
                               : Colors.orange.shade50,
                           child: ListTile(
                             leading: Icon(
-                              profile.isVerified 
-                                  ? Icons.verified 
+                              profile.isVerified
+                                  ? Icons.verified
                                   : Icons.pending,
-                              color: profile.isVerified 
-                                  ? Colors.green 
+                              color: profile.isVerified
+                                  ? Colors.green
                                   : Colors.orange,
                             ),
                             title: Text(
-                              profile.isVerified 
-                                  ? 'Verified Vendor' 
+                              profile.isVerified
+                                  ? 'Verified Vendor'
                                   : 'Pending Verification',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
-                              profile.isVerified 
-                                  ? 'Your business is verified' 
+                              profile.isVerified
+                                  ? 'Your business is verified'
                                   : 'Your profile is under review',
                             ),
                           ),
@@ -413,11 +391,14 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                         // Availability Toggle
                         Card(
                           child: SwitchListTile(
-                            title: Text(languageProvider.translate('available_for_orders')),
+                            title: Text(languageProvider
+                                .translate('available_for_orders')),
                             subtitle: Text(
                               profile.isActive
-                                  ? languageProvider.translate('accepting_orders')
-                                  : languageProvider.translate('not_accepting_orders'),
+                                  ? languageProvider
+                                      .translate('accepting_orders')
+                                  : languageProvider
+                                      .translate('not_accepting_orders'),
                             ),
                             value: profile.isActive,
                             onChanged: controller.isEditing
