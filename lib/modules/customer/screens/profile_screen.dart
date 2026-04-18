@@ -9,6 +9,7 @@ import '../../../localization/language_provider.dart';
 import '../../../core/extensions/string_extensions.dart';
 import '../controllers/customer_profile_controller.dart';
 import '../../../shared/services/location_service.dart';
+import '../../auth/controllers/auth_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -133,6 +134,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _logout() async {
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final isSwahili = languageProvider.currentLocale.languageCode == 'sw';
+    
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isSwahili ? 'Thibitisha Kutoka' : 'Confirm Logout'),
+        content: Text(isSwahili ? 'Una uhakika unataka kutoka?' : 'Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(isSwahili ? 'Ghairi' : 'Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(isSwahili ? 'Toka' : 'Logout', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true && mounted) {
+      try {
+        final authController = context.read<AuthController>();
+        await authController.signOut();
+        
+        // Navigate to login screen
+        if (mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.login,
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error logging out: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
@@ -145,11 +194,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(isSwahili ? 'Wasifu Wangu' : 'My Profile'),
         centerTitle: true,
         actions: [
-          if (!controller.isEditing && profile.isNotEmpty)
+          if (!controller.isEditing && profile.isNotEmpty) ...[
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: controller.toggleEditing,
             ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: _logout,
+              tooltip: isSwahili ? 'Toka' : 'Logout',
+            ),
+          ],
         ],
       ),
       body: controller.isLoading
@@ -168,6 +223,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 24),
                         _buildLocationSection(controller, isSwahili),
                         const SizedBox(height: 24),
+                        if (!controller.isEditing) _buildLogoutSection(isSwahili),
                         if (controller.isEditing) _buildActionButtons(isSwahili),
                       ],
                     ),
@@ -552,6 +608,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildLogoutSection(bool isSwahili) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            isSwahili ? 'Hatua za Akaunti' : 'Account Actions',
+            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _logout,
+              icon: const Icon(Icons.logout, color: Colors.white),
+              label: Text(
+                isSwahili ? 'Toka kwenye Akaunti' : 'Logout',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isSwahili 
+                ? 'Ukitoka, utahitaji kuingia tena kufikia huduma zako'
+                : 'After logging out, you will need to sign in again to access your services',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 

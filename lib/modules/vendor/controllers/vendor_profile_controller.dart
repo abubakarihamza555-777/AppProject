@@ -59,8 +59,8 @@ class VendorProfileController extends ChangeNotifier {
   Future<bool> createOrUpdateVendorProfile({
     required String businessName,
     required String businessPhone,
-    required String businessAddress,
-    String? businessLicense,
+    String businessAddress = '', // Now optional with default
+    String? businessLicense, // Now optional
     required String vehicleType,
     required int maxLitersPerTrip,
     required List<int> serviceAreas,
@@ -89,7 +89,7 @@ class VendorProfileController extends ChangeNotifier {
         'user_id': currentUser.id,
         'business_name': businessName,
         'business_phone': businessPhone,
-        'business_address': businessAddress,
+        'business_address': businessAddress.isNotEmpty ? businessAddress : 'Dar es Salaam',
         'business_license': businessLicense,
         'vehicle_type': vehicleType,
         'max_liters_per_trip': maxLitersPerTrip,

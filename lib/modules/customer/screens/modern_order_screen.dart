@@ -40,7 +40,6 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
   Map<String, dynamic>? _selectedVendor;
   bool _useAlternativeAddress = false;
   bool _isPlacingOrder = false;
-  String _selectedWaterType = 'Standard Purified Water';
   String _selectedPaymentMethod = 'cash';
   String? _customerId;
   bool _isLoadingVendors = true;
@@ -55,38 +54,12 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
   String _savedHouseNumber = '';
   String _savedLandmark = '';
   bool _savedTruckAccess = true;
+  String _customerDistrictName = '';
+  String _customerWardName = '';
 
   // ==================== ANIMATIONS ====================
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
-  // ==================== WATER TYPES ====================
-  final List<Map<String, dynamic>> _waterTypes = [
-    {
-      'name': 'Standard Purified Water',
-      'price_per_liter': 100,
-      'icon': Icons.water_drop,
-      'color': 0xFF2196F3
-    },
-    {
-      'name': 'Mineral Water',
-      'price_per_liter': 150,
-      'icon': Icons.water,
-      'color': 0xFF4CAF50
-    },
-    {
-      'name': 'Spring Water',
-      'price_per_liter': 200,
-      'icon': Icons.cleaning_services,
-      'color': 0xFF00BCD4
-    },
-    {
-      'name': 'Premium Alkaline',
-      'price_per_liter': 250,
-      'icon': Icons.spa,
-      'color': 0xFF9C27B0
-    },
-  ];
 
   // ==================== VEHICLE TYPES ====================
   final Map<String, Map<String, dynamic>> _vehicleTypes = {
@@ -94,25 +67,31 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
       'icon': Icons.agriculture,
       'color': Colors.green,
       'name': 'Towable Browser',
+      'name_sw': 'Towable Browser',
       'capacity': '400-2000L',
       'min': 400,
       'max': 2000,
+      'description': 'Inafaa kwa nyumba ndogo',
     },
     'medium_truck': {
       'icon': Icons.local_shipping,
       'color': Colors.blue,
       'name': 'Medium Truck',
+      'name_sw': 'Lori la Kati',
       'capacity': '3000-5000L',
       'min': 3000,
       'max': 5000,
+      'description': 'Inafaa kwa majengo ya ghorofa',
     },
     'heavy_truck': {
       'icon': Icons.airport_shuttle,
       'color': Colors.orange,
       'name': 'Heavy Duty Truck',
+      'name_sw': 'Lori Kubwa',
       'capacity': '8000-16000L',
       'min': 8000,
       'max': 16000,
+      'description': 'Inafaa kwa viwanda na makubwa',
     },
   };
 
@@ -179,6 +158,10 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
           _savedLandmark = profile['landmark'] ?? '';
           _savedTruckAccess = profile['is_truck_accessible'] ?? true;
 
+          // Get district and ward names
+          _customerDistrictName = await _getDistrictName(_selectedDistrictId);
+          _customerWardName = await _getWardName(_selectedWardId);
+
           // Pre-fill if using saved address
           _streetController.text = _savedStreetName;
           _houseController.text = _savedHouseNumber;
@@ -195,6 +178,27 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
     } finally {
       setState(() => _isLoadingProfile = false);
     }
+  }
+
+  Future<String> _getDistrictName(int? districtId) async {
+    if (districtId == null) return '';
+    final districts = await LocationService.getDistricts();
+    final district = districts.firstWhere(
+      (d) => d['id'] == districtId,
+      orElse: () => {'name': ''},
+    );
+    return district['name'] as String;
+  }
+
+  Future<String> _getWardName(int? wardId) async {
+    if (wardId == null) return '';
+    if (_selectedDistrictId == null) return '';
+    final wards = await LocationService.getWards(_selectedDistrictId!);
+    final ward = wards.firstWhere(
+      (w) => w['id'] == wardId,
+      orElse: () => {'name': ''},
+    );
+    return ward['name'] as String;
   }
 
   Future<void> _loadLocationData() async {
@@ -222,6 +226,7 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
     setState(() => _isLoadingVendors = true);
     try {
       final homeController = context.read<HomeController>();
+      // Pass customer's district and ward to filter vendors
       await homeController.loadVendorsByLocation(
         districtId: _selectedDistrictId,
         wardId: _selectedWardId,
@@ -236,16 +241,8 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
   }
 
   // ==================== CALCULATIONS ====================
-  double _getWaterPricePerLiter() {
-    final waterType = _waterTypes.firstWhere(
-      (wt) => wt['name'] == _selectedWaterType,
-      orElse: () => _waterTypes[0],
-    );
-    return (waterType['price_per_liter'] as num).toDouble();
-  }
-
   int _calculateWaterCost() {
-    return (_selectedQuantity * _getWaterPricePerLiter()).round();
+    return _selectedQuantity * 100; // 100 TZS per liter
   }
 
   int _calculateDeliveryFee() {
@@ -310,16 +307,20 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
       final withinCapacity =
           _selectedQuantity >= minCapacity && _selectedQuantity <= maxCapacity;
 
-      // Also check truck accessibility
+      // Check if vendor serves this customer's district
+      final serviceAreas = vendor['service_areas'] as List? ?? [];
+      final servesDistrict = serviceAreas.isEmpty ||
+          (_selectedDistrictId != null && serviceAreas.contains(_selectedDistrictId));
+
+      // Check truck accessibility
       final truckAccess = _savedTruckAccess || vehicleType == 'towable';
 
-      return withinCapacity && truckAccess;
+      return withinCapacity && servesDistrict && truckAccess;
     }).toList();
   }
 
   // ==================== ORDER PLACEMENT ====================
   Future<void> _placeOrder() async {
-    // Validate
     if (_selectedVendor == null) {
       _showSnackBar(_translate('please_select_vendor'), Colors.red);
       return;
@@ -347,11 +348,11 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
       final order = await _orderService.createOrder(
         customerId: _customerId!,
         vendorId: _selectedVendorId!,
-        waterType: _selectedWaterType,
+        waterType: 'Fresh Water', // Single water type
         quantity: _selectedQuantity,
         totalPrice: totalPrice,
         deliveryAddress: deliveryAddress,
-        paymentMethod: _selectedPaymentMethod,
+        paymentMethod: 'mobile_money', // Force mobile money
       );
 
       if (order != null && mounted) {
@@ -408,10 +409,11 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
             const SizedBox(height: 8),
             Text(
               isSwahili
-                  ? 'Utapata taarifa kwa simu yako'
-                  : 'You will receive SMS confirmation',
+                  ? 'Utalipa kwa M-Pesa baada ya vendor kuthibitisha uwasilishaji'
+                  : 'You will pay via M-Pesa after vendor confirms delivery',
               style: GoogleFonts.poppins(
-                  fontSize: 12, color: Colors.grey.shade500),
+                  fontSize: 12, color: Colors.blue.shade600),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -504,11 +506,10 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                     children: [
                       _buildHeader(isSwahili),
                       const SizedBox(height: 8),
-                      _buildWaterTypeSection(isSwahili),
                       _buildQuantitySection(isSwahili),
                       _buildVendorSection(isSwahili),
                       _buildLocationSection(isSwahili),
-                      _buildPaymentSection(isSwahili),
+                      _buildPaymentInfoSection(isSwahili),
                       _buildOrderSummary(isSwahili),
                       const SizedBox(height: 80),
                     ],
@@ -520,7 +521,7 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
   Widget _buildHeader(bool isSwahili) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.blue.shade700, Colors.blue.shade900],
@@ -554,7 +555,7 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                     Text(
                       isSwahili ? 'Oda Maji Yako' : 'Order Your Water',
                       style: GoogleFonts.poppins(
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -582,98 +583,32 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWaterTypeSection(bool isSwahili) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(16),
-        decoration: _cardDecoration(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+          const SizedBox(height: 16),
+          // Customer location display
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.cyan.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.water_drop, color: Colors.cyan.shade700),
-                ),
-                const SizedBox(width: 12),
+                const Icon(Icons.location_on, color: Colors.white, size: 16),
+                const SizedBox(width: 4),
                 Text(
-                  isSwahili ? 'Aina ya Maji' : 'Water Type',
+                  _customerDistrictName.isNotEmpty
+                      ? '$_customerWardName, $_customerDistrictName'
+                      : isSwahili ? 'Mahali haijachaguliwa' : 'Location not set',
                   style: GoogleFonts.poppins(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _waterTypes.length,
-                itemBuilder: (context, index) {
-                  final type = _waterTypes[index];
-                  final isSelected = _selectedWaterType == type['name'];
-                  final color = Color(type['color'] as int);
-                  return GestureDetector(
-                    onTap: () =>
-                        setState(() => _selectedWaterType = type['name']),
-                    child: Container(
-                      width: 130,
-                      margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? color.withValues(alpha: 0.1)
-                            : Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? color : Colors.grey.shade300,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(type['icon'] as IconData,
-                              color: isSelected ? color : Colors.grey,
-                              size: 28),
-                          const SizedBox(height: 8),
-                          Text(
-                            type['name'],
-                            style: GoogleFonts.poppins(
-                              fontSize: 11,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: isSelected ? color : Colors.grey.shade700,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          Text(
-                            'TZS ${type['price_per_liter']}/L',
-                            style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                color: isSelected ? color : Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -683,7 +618,7 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
       opacity: _fadeAnimation,
       child: Container(
         margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: _cardDecoration(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -701,140 +636,155 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  isSwahili ? 'Kiasi cha Maji' : 'Quantity',
+                  isSwahili ? 'Kiasi cha Maji (Lita)' : 'Water Quantity (Liters)',
                   style: GoogleFonts.poppins(
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(isSwahili ? 'Lita Unazohitaji' : 'Liters Needed',
-                          style:
-                              GoogleFonts.poppins(color: Colors.grey.shade600)),
-                      Text('$_selectedQuantity L',
-                          style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade700)),
-                    ],
+            const SizedBox(height: 20),
+            // Modern quantity slider with visual feedback
+            Column(
+              children: [
+                // Animated quantity display
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade50, Colors.blue.shade100],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child:
-                            _buildQuantityButton(Icons.remove, Colors.red, () {
-                          setState(() {
-                            if (_selectedQuantity > 10) {
-                              _selectedQuantity -= 10;
-                              _selectedVendor = null;
-                            }
-                          });
-                        }),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: _quantityController,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            contentPadding:
-                                const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          onChanged: (value) {
-                            final quantity = int.tryParse(value);
-                            if (quantity != null &&
-                                quantity >= 10 &&
-                                quantity <= 20000) {
-                              setState(() {
-                                _selectedQuantity = quantity;
-                                _selectedVendor = null;
-                              });
-                            }
-                          },
+                      Text(
+                        '${_selectedQuantity.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child:
-                            _buildQuantityButton(Icons.add, Colors.green, () {
-                          setState(() {
-                            if (_selectedQuantity < 20000) {
-                              _selectedQuantity += 10;
-                              _selectedVendor = null;
-                            }
-                          });
-                        }),
+                      Text(
+                        isSwahili ? 'Lita' : 'Liters',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.blue.shade600,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [20, 40, 100, 200, 500, 1000, 2000, 5000]
-                        .map((quantity) {
-                      final isSelected = _selectedQuantity == quantity;
-                      return FilterChip(
-                        label: Text('${quantity}L'),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
+                ),
+                const SizedBox(height: 20),
+                // Quantity slider
+                Slider(
+                  value: _selectedQuantity.toDouble(),
+                  min: 10,
+                  max: 20000,
+                  divisions: 200,
+                  label: '$_selectedQuantity L',
+                  activeColor: Colors.blue.shade700,
+                  inactiveColor: Colors.grey.shade300,
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedQuantity = value.round();
+                      _selectedVendor = null;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                // Quick quantity chips
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  alignment: WrapAlignment.center,
+                  children: [20, 40, 100, 200, 500, 1000, 2000, 5000, 10000]
+                      .map((quantity) {
+                    final isSelected = _selectedQuantity == quantity;
+                    return FilterChip(
+                      label: Text('${quantity}L'),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _selectedQuantity = quantity;
+                            _selectedVendor = null;
+                          });
+                        }
+                      },
+                      backgroundColor: Colors.grey.shade100,
+                      selectedColor: Colors.blue.shade600,
+                      labelStyle: GoogleFonts.poppins(
+                        color: isSelected ? Colors.white : Colors.grey.shade700,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 12),
+                // Custom quantity input
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _quantityController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: isSwahili ? 'Kiasi maalum' : 'Custom quantity',
+                          hintText: isSwahili ? 'Weka lita' : 'Enter liters',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          prefixIcon: const Icon(Icons.edit, size: 20),
+                        ),
+                        onFieldSubmitted: (value) {
+                          final quantity = int.tryParse(value);
+                          if (quantity != null && quantity >= 10 && quantity <= 20000) {
                             setState(() {
                               _selectedQuantity = quantity;
-                              _quantityController.text = quantity.toString();
                               _selectedVendor = null;
                             });
                           }
                         },
-                        backgroundColor: Colors.grey.shade100,
-                        selectedColor: Colors.blue.shade600,
-                        labelStyle: GoogleFonts.poppins(
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.grey.shade700),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        final quantity = int.tryParse(_quantityController.text);
+                        if (quantity != null && quantity >= 10 && quantity <= 20000) {
+                          setState(() {
+                            _selectedQuantity = quantity;
+                            _selectedVendor = null;
+                          });
+                        } else {
+                          _showSnackBar(
+                            isSwahili ? 'Weka kiasi sahihi (10-20000 Lita)' : 'Enter valid quantity (10-20000 Liters)',
+                            Colors.red,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        isSwahili ? 'Weka' : 'Set',
+                        style: GoogleFonts.poppins(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildQuantityButton(IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Icon(icon, color: color, size: 28),
       ),
     );
   }
@@ -863,12 +813,40 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                       color: Colors.orange.shade700),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  isSwahili ? 'Chagua Mtoa Huduma' : 'Select Vendor',
-                  style: GoogleFonts.poppins(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    isSwahili ? 'Wenye Huduma Karibu Nawe' : 'Vendors Near You',
+                    style: GoogleFonts.poppins(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
+                if (_customerDistrictName.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _customerDistrictName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ),
               ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isSwahili
+                  ? 'Wenye huduma wanaohudumia eneo lako'
+                  : 'Vendors that serve your area',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+              ),
             ),
             const SizedBox(height: 16),
             if (_isLoadingVendors)
@@ -880,28 +858,32 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade50,
+                  color: Colors.orange.shade50,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.orange.shade200),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.error_outline,
-                        color: Colors.red.shade600, size: 48),
+                    Icon(Icons.store_outlined,
+                        color: Colors.orange.shade600, size: 48),
                     const SizedBox(height: 12),
                     Text(
-                      isSwahili ? 'Hakuna Mtoa Huduma' : 'No Vendors Available',
+                      isSwahili
+                          ? 'Hakuna Mtoa Huduma Katika Eneo Lako'
+                          : 'No Vendors in Your Area',
                       style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red.shade600),
+                          color: Colors.orange.shade600),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       isSwahili
-                          ? 'Jaribu kiasi kingine cha maji'
-                          : 'Try a different water quantity',
+                          ? 'Jaribu kiasi kingine cha maji au wasiliana nasi'
+                          : 'Try a different water quantity or contact us',
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: Colors.grey.shade600),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -925,31 +907,41 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                       _selectedVendorId = vendor['id'];
                       _selectedVendor = vendor;
                     }),
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? color.withValues(alpha: 0.1)
-                            : Colors.grey.shade50,
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isSelected ? color : Colors.grey.shade300,
+                          color: isSelected ? color : Colors.grey.shade200,
                           width: isSelected ? 2 : 1,
                         ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                )
+                              ]
+                            : null,
                       ),
                       child: Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.2),
+                              color: color.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(vehicleInfo['icon'] as IconData,
-                                color: color, size: 24),
+                                color: color, size: 28),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -957,39 +949,50 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                                 Text(
                                   vendor['business_name'] ?? 'Unknown Vendor',
                                   style: GoogleFonts.poppins(
-                                      fontSize: 14,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(Icons.star,
-                                        size: 12, color: Colors.amber),
-                                    const SizedBox(width: 2),
+                                    Icon(Icons.star,
+                                        size: 14, color: Colors.amber.shade700),
+                                    const SizedBox(width: 4),
                                     Text('${vendor['rating'] ?? 0.0}',
-                                        style:
-                                            GoogleFonts.poppins(fontSize: 10)),
-                                    const SizedBox(width: 8),
+                                        style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500)),
+                                    const SizedBox(width: 12),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
+                                          horizontal: 8, vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: color.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(4),
+                                        color: color.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        vehicleInfo['name'] as String,
+                                        isSwahili
+                                            ? vehicleInfo['name_sw'] as String
+                                            : vehicleInfo['name'] as String,
                                         style: GoogleFonts.poppins(
-                                            fontSize: 10, color: color),
+                                            fontSize: 10,
+                                            color: color,
+                                            fontWeight: FontWeight.w500),
                                       ),
                                     ),
                                   ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  vehicleInfo['description'] as String,
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 11, color: Colors.grey.shade500),
                                 ),
                               ],
                             ),
                           ),
                           if (isSelected)
-                            Icon(Icons.check_circle, color: color, size: 24),
+                            Icon(Icons.check_circle, color: color, size: 28),
                         ],
                       ),
                     ),
@@ -1048,8 +1051,8 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                             GoogleFonts.poppins(fontWeight: FontWeight.w500)),
                     subtitle: Text(
                         _savedStreetName.isNotEmpty
-                            ? _savedStreetName
-                            : 'No saved address',
+                            ? '$_savedStreetName, $_savedHouseNumber'
+                            : isSwahili ? 'Hakuna anwani' : 'No address saved',
                         style: GoogleFonts.poppins(fontSize: 12)),
                     value: false,
                     groupValue: _useAlternativeAddress,
@@ -1116,7 +1119,7 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
     );
   }
 
-  Widget _buildPaymentSection(bool isSwahili) {
+  Widget _buildPaymentInfoSection(bool isSwahili) {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
@@ -1144,72 +1147,60 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildPaymentOption(
-                    icon: Icons.money,
-                    title: isSwahili ? 'Pesa' : 'Cash',
-                    subtitle: isSwahili ? 'Lipa unapopokea' : 'Pay on delivery',
-                    isSelected: _selectedPaymentMethod == 'cash',
-                    onTap: () =>
-                        setState(() => _selectedPaymentMethod = 'cash'),
-                    color: Colors.green,
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Image.asset(
+                      'assets/icons/mpesa.png',
+                      height: 30,
+                      width: 30,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.phone_android,
+                            color: Colors.green, size: 30);
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildPaymentOption(
-                    icon: Icons.phone_android,
-                    title: isSwahili ? 'M-Pesa' : 'Mobile Money',
-                    subtitle: isSwahili ? 'Lipa kwa simu' : 'Pay via mobile',
-                    isSelected: _selectedPaymentMethod == 'mobile',
-                    onTap: () =>
-                        setState(() => _selectedPaymentMethod = 'mobile'),
-                    color: Colors.blue,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isSwahili ? 'M-Pesa' : 'M-Pesa',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          isSwahili
+                              ? 'Utalipa baada ya vendor kuthibitisha uwasilishaji'
+                              : 'You will pay after vendor confirms delivery',
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required Color color,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color:
-              isSelected ? color.withValues(alpha: 0.1) : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? color : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: isSelected ? color : Colors.grey, size: 32),
-            const SizedBox(height: 8),
-            Text(title,
-                style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    color: isSelected ? color : Colors.grey.shade700)),
-            Text(subtitle,
-                style: GoogleFonts.poppins(
-                    fontSize: 10, color: Colors.grey.shade500)),
           ],
         ),
       ),
@@ -1245,8 +1236,6 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
             ),
             const SizedBox(height: 16),
             _buildSummaryRow(
-                isSwahili ? 'Aina ya Maji' : 'Water Type', _selectedWaterType),
-            _buildSummaryRow(
                 isSwahili ? 'Kiasi' : 'Quantity', '$_selectedQuantity L'),
             _buildSummaryRow(isSwahili ? 'Gharama ya Maji' : 'Water Cost',
                 'TZS ${_formatPrice(waterCost)}'),
@@ -1257,6 +1246,24 @@ class _ModernOrderScreenState extends State<ModernOrderScreen>
             _buildSummaryRow(
                 isSwahili ? 'JUMLA' : 'TOTAL', 'TZS ${_formatPrice(total)}',
                 isBold: true),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isSwahili
+                    ? 'Malipo kwa M-Pesa baada ya uwasilishaji'
+                    : 'Payment via M-Pesa after delivery confirmation',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: Colors.white70,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
             const SizedBox(height: 20),
             CustomButton(
               text: isSwahili ? 'WEKA ODA SASA' : 'PLACE ORDER NOW',

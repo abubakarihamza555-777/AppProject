@@ -14,22 +14,21 @@ class OrderService {
     required int quantity,
     required double totalPrice,
     required String deliveryAddress,
-    required String paymentMethod,
+    required String paymentMethod, // Will always be 'mobile_money'
   }) async {
     try {
-      final orderId = _generateOrderId();
       final now = DateTime.now().toIso8601String();
       
+      // DO NOT include 'id' field - let database generate UUID automatically
       final orderData = {
-        'id': orderId,
         'customer_id': customerId,
         'vendor_id': vendorId,
         'water_type': waterType,
         'quantity': quantity,
         'total_price': totalPrice,
         'delivery_address': deliveryAddress,
-        'payment_method': paymentMethod,
-        'status': 'placed',
+        'payment_method': 'mobile_money', // Force mobile money
+        'status': 'pending_payment', // Payment pending until delivery confirmation
         'created_at': now,
         'updated_at': now,
         'tracking_number': 'TRK${DateTime.now().millisecondsSinceEpoch}',
@@ -42,7 +41,7 @@ class OrderService {
           .single();
       
       // Create notification for vendor
-      await _createVendorNotification(vendorId, orderId);
+      await _createVendorNotification(vendorId, response['id']);
       
       return OrderModel.fromJson(response);
     } catch (e) {
@@ -51,14 +50,7 @@ class OrderService {
     }
   }
   
-  // Generate unique order ID
-  String _generateOrderId() {
-    const prefix = 'ORD';
-    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    final random = (DateTime.now().microsecondsSinceEpoch % 10000).toString().padLeft(4, '0');
-    return '$prefix${timestamp.substring(timestamp.length - 8)}$random';
-  }
-  
+    
   // Create vendor notification
   Future<void> _createVendorNotification(String vendorId, String orderId) async {
     try {

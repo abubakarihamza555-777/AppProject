@@ -1,0 +1,22 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1976D2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="512" cy="512" r="450" fill="#2196F3"/>
+  
+  <!-- Water drop shape -->
+  <path d="M512 200 C512 200, 300 450, 300 600 C300 720, 390 800, 512 800 C634 800, 724 720, 724 600 C724 450, 512 200, 512 200 Z" 
+        fill="url(#waterGradient)" 
+        stroke="#ffffff" 
+        stroke-width="8"/>
+  
+  <!-- Water drop highlight -->
+  <path d="M512 250 C512 250, 380 400, 380 500 C380 580, 440 630, 512 630 C584 630, 644 580, 644 500 C644 400, 512 250, 512 250 Z" 
+        fill="#ffffff" 
+        opacity="0.3"/>
+</svg>
